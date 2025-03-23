@@ -1,0 +1,2803 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Othello AI Arena</title>
+    <style>
+        /* [KEEP EXISTING CSS] */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .code-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 2px;
+            background: #000;
+            padding: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .cell {
+            background: #1e8d1e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .disc {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        
+        .disc.black {
+            background: #000;
+            border: 1px solid #333;
+        }
+        
+        .disc.white {
+            background: #fff;
+            border: 1px solid #ccc;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .info-panel {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 404px;
+            margin-bottom: 10px;
+        }
+        
+        .score-box {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .score-box.black {
+            background: #eee;
+            border-left: 4px solid #000;
+        }
+        
+        .score-box.white {
+            background: #eee;
+            border-right: 4px solid #000;
+        }
+        
+        .status {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 404px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .game-log {
+            max-height: 150px;
+            overflow-y: auto;
+            width: 100%;
+            max-width: 404px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .code-editor {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 10px;
+            resize: vertical;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        
+        .template-container {
+            margin-top: 10px;
+            text-align: left;
+        }
+        
+        #strategy-name {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        /* Add these new CSS styles for strategy management */
+        .strategy-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .saved-strategies {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .strategy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .strategy-item:last-child {
+            border-bottom: none;
+        }
+        
+        .strategy-item .buttons {
+            display: flex;
+        }
+        
+        .strategy-item button {
+            padding: 5px 10px;
+            margin: 0 3px;
+            font-size: 12px;
+        }
+        
+        .delete-btn {
+            background-color: #f44336;
+        }
+        
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+
+
+        /* Uploading strategies */
+        .strategy-upload {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        .strategy-upload h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .strategy-upload p {
+            margin-bottom: 10px;
+        }
+
+        #strategy-file-input {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        /* Optional: Style to show upload status */
+        .upload-status {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .upload-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .upload-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Othello AI Arena</h1>
+    
+    <div class="container">
+        <div class="game-container">
+            <!-- [KEEP GAME CONTAINER CONTENT] -->
+            <div class="info-panel">
+                <div class="score-box black">Black: <span id="black-score">13</span></div>
+                <div class="score-box white">White: <span id="white-score">0</span></div>
+            </div>
+            
+            <div class="status" id="status" style="background-color: rgb(51, 51, 51);">Game over. Black wins! (13-0)</div>
+            
+            <div class="board" id="board"><div class="cell" data-row="0" data-col="0"></div><div class="cell" data-row="0" data-col="1"></div><div class="cell" data-row="0" data-col="2"></div><div class="cell" data-row="0" data-col="3"></div><div class="cell" data-row="0" data-col="4"></div><div class="cell" data-row="0" data-col="5"></div><div class="cell" data-row="0" data-col="6"></div><div class="cell" data-row="0" data-col="7"></div><div class="cell" data-row="1" data-col="0"></div><div class="cell" data-row="1" data-col="1"></div><div class="cell" data-row="1" data-col="2"></div><div class="cell" data-row="1" data-col="3"></div><div class="cell" data-row="1" data-col="4"></div><div class="cell" data-row="1" data-col="5"></div><div class="cell" data-row="1" data-col="6"></div><div class="cell" data-row="1" data-col="7"></div><div class="cell" data-row="2" data-col="0"></div><div class="cell" data-row="2" data-col="1"><div class="disc black"></div></div><div class="cell" data-row="2" data-col="2"><div class="disc black"></div></div><div class="cell" data-row="2" data-col="3"><div class="disc black"></div></div><div class="cell" data-row="2" data-col="4"><div class="disc black"></div></div><div class="cell" data-row="2" data-col="5"><div class="disc black"></div></div><div class="cell" data-row="2" data-col="6"></div><div class="cell" data-row="2" data-col="7"></div><div class="cell" data-row="3" data-col="0"></div><div class="cell" data-row="3" data-col="1"></div><div class="cell" data-row="3" data-col="2"></div><div class="cell" data-row="3" data-col="3"><div class="disc black"></div></div><div class="cell" data-row="3" data-col="4"><div class="disc black"></div></div><div class="cell" data-row="3" data-col="5"><div class="disc black"></div></div><div class="cell" data-row="3" data-col="6"></div><div class="cell" data-row="3" data-col="7"></div><div class="cell" data-row="4" data-col="0"></div><div class="cell" data-row="4" data-col="1"></div><div class="cell" data-row="4" data-col="2"></div><div class="cell" data-row="4" data-col="3"><div class="disc black"></div></div><div class="cell" data-row="4" data-col="4"><div class="disc black"></div></div><div class="cell" data-row="4" data-col="5"><div class="disc black"></div></div><div class="cell" data-row="4" data-col="6"></div><div class="cell" data-row="4" data-col="7"></div><div class="cell" data-row="5" data-col="0"></div><div class="cell" data-row="5" data-col="1"></div><div class="cell" data-row="5" data-col="2"></div><div class="cell" data-row="5" data-col="3"><div class="disc black"></div></div><div class="cell" data-row="5" data-col="4"></div><div class="cell" data-row="5" data-col="5"></div><div class="cell" data-row="5" data-col="6"></div><div class="cell" data-row="5" data-col="7"></div><div class="cell" data-row="6" data-col="0"></div><div class="cell" data-row="6" data-col="1"></div><div class="cell" data-row="6" data-col="2"></div><div class="cell" data-row="6" data-col="3"><div class="disc black"></div></div><div class="cell" data-row="6" data-col="4"></div><div class="cell" data-row="6" data-col="5"></div><div class="cell" data-row="6" data-col="6"></div><div class="cell" data-row="6" data-col="7"></div><div class="cell" data-row="7" data-col="0"></div><div class="cell" data-row="7" data-col="1"></div><div class="cell" data-row="7" data-col="2"></div><div class="cell" data-row="7" data-col="3"></div><div class="cell" data-row="7" data-col="4"></div><div class="cell" data-row="7" data-col="5"></div><div class="cell" data-row="7" data-col="6"></div><div class="cell" data-row="7" data-col="7"></div></div>
+            
+            <div class="controls">
+                <div>
+                    <label for="black-ai">Black AI:</label>
+                    <select id="black-ai">
+                        <option value="random">Random</option>
+                        <option value="greedy" selected="">Greedy</option>
+                        <option value="corners">Corner Strategy</option>
+                        <option value="positional">Positional Strategy</option>
+                        <option value="minimax">MinMax Strategy</option>
+                        <option value="mcts">Monte Carlo Strategy</option>
+                        <option value="mcts_heuristic_slow">Monte Carlo Heuristic Strategy</option>
+                        <option value="mcts_heuristic_fast">Monte Carlo Heuristic Strategy Fast</option>
+                        <!-- No "Custom Strategy" option since we'll generate them dynamically -->
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="white-ai">White AI:</label>
+                    <select id="white-ai">
+                        <option value="random">Random</option>
+                        <option value="greedy">Greedy</option>
+                        <option value="corners" selected="">Corner Strategy</option>
+                        <option value="positional">Positional Strategy</option>
+                        <option value="minimax">MinMax Strategy</option>
+                        <option value="mcts">Monte Carlo Strategy</option>
+                        <option value="mcts_heuristic_slow">Monte Carlo Heuristic Strategy</option>
+                        <option value="mcts_heuristic_fast">Monte Carlo Heuristic Strategy Fast</option>
+                        <option value="expert">Expert Strategy</option>
+                        <!-- No "Custom Strategy" option since we'll generate them dynamically -->
+                    </select>
+                </div>
+                
+                <div>
+                    <button id="start-btn">Start Game</button>
+                    <button id="reset-btn">Reset Game</button>
+                </div>
+            </div>
+            
+            <div class="game-log" id="game-log">Game started: Greedy (Black) vs Positional Strategy (White)<br>Black: d3<br>White: c3<br>Black: b3<br>White: e3<br>Black: f3<br>White: f4<br>Black: f5<br>White: d6<br>Black: d7<br>Game over: Final score 13-0<br>Black wins by 13 pieces!<br>Game over</div>
+        </div>
+        
+        <div class="code-container">
+            <h3>Custom JavaScript Strategy</h3>
+            <div>
+                <label for="strategy-name">Strategy Name:</label>
+                <input type="text" id="strategy-name" value="myStrategy">
+            </div>
+            <textarea class="code-editor" id="js-code">// Write your custom Othello strategy here
+// Return an object with row and col properties, or null if no moves are possible
+// Example: return { row: 3, col: 4 } or return null
+
+// Available variables:
+// board: 8x8 array where 0=empty, 1=black, 2=white
+// player: 1 for black, 2 for white
+// getValidMoves(player): returns array of valid moves for player
+
+// Strategy: Find best move based on position value
+const validMoves = getValidMoves(player);
+if (validMoves.length === 0) return null;
+
+// Position weights - corners are best, edges next, avoid squares next to corners
+const positionWeights = [
+    [90, -15, 10, 5, 5, 10, -15, 90],
+    [-15, -25, -3, -3, -3, -3, -25, -15],
+    [10, -3, 2, 1, 1, 2, -3, 10],
+    [5, -3, 1, 1, 1, 1, -3, 5],
+    [5, -3, 1, 1, 1, 1, -3, 5],
+    [10, -3, 2, 1, 1, 2, -3, 10],
+    [-15, -25, -3, -3, -3, -3, -25, -15],
+    [90, -15, 10, 5, 5, 10, -15, 90]
+];
+
+let bestMove = null;
+let bestScore = -Infinity;
+
+for (const move of validMoves) {
+    // Score based on position
+    const positionScore = positionWeights[move.row][move.col];
+    
+    if (positionScore &gt; bestScore) {
+        bestScore = positionScore;
+        bestMove = move;
+    }
+}
+
+return bestMove;
+            </textarea>
+            
+            <!-- Replace "Apply Custom Strategy" with save/clear buttons -->
+            <div class="strategy-buttons">
+                <button id="save-strategy">Save Strategy</button>
+                <button id="clear-editor">Clear Editor</button>
+            </div>
+            
+            <!-- Strategy upload -->
+            <div class="strategy-upload">
+                <h4>Upload Strategy Files</h4>
+                <p>Upload JavaScript files containing strategy code:</p>
+                <input type="file" id="strategy-file-input" accept=".js" multiple="">
+                <button id="upload-strategies">Upload Strategies</button>
+            </div>
+
+            <!-- Add this new section for saved strategies list -->
+            <h4>Saved Strategies</h4>
+            <div class="saved-strategies" id="strategy-list"><div class="strategy-item"><span>No saved strategies yet</span></div></div>
+            
+            <div class="template-container">
+                <h4>Strategy Template</h4>
+                <p>Your strategy must return a move object with <code>row</code> and <code>col</code> properties, or <code>null</code> if no valid moves are available.</p>
+                <p>Use the <code>getValidMoves(player)</code> function to get all valid moves.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Game constants
+        const EMPTY = 0;
+        const BLACK = 1;
+        const WHITE = 2;
+        const BOARD_SIZE = 8;
+        
+        // Game state
+        let board = [];
+        let currentPlayer = BLACK;
+        let gameRunning = false;
+        let moveLog = [];
+        // Add this new variable for strategy storage
+        let savedStrategies = {};
+        let gameStartLogged = false;
+        
+        // DOM elements
+        const boardElement = document.getElementById('board');
+        const statusElement = document.getElementById('status');
+        const blackScoreElement = document.getElementById('black-score');
+        const whiteScoreElement = document.getElementById('white-score');
+        const blackAISelect = document.getElementById('black-ai');
+        const whiteAISelect = document.getElementById('white-ai');
+        const startButton = document.getElementById('start-btn');
+        const resetButton = document.getElementById('reset-btn');
+        const gameLogElement = document.getElementById('game-log');
+        const jsCodeElement = document.getElementById('js-code');
+        const strategyNameInput = document.getElementById('strategy-name');
+        // Replace applyJsButton with these two new buttons
+        const saveStrategyButton = document.getElementById('save-strategy');
+        const clearEditorButton = document.getElementById('clear-editor');
+        // Add reference to strategy list
+        const strategyListElement = document.getElementById('strategy-list');
+        const strategyFileInput = document.getElementById('strategy-file-input');
+        const uploadStrategiesButton = document.getElementById('upload-strategies');
+        
+        // [KEEP ALL STANDARD GAME FUNCTIONS]
+        // initializeBoard, updateBoardDisplay, countDiscs, isValidMove, getValidMoves, makeMove...
+
+        // Initialize the game board
+        function initializeBoard() {
+            // Create empty board
+            board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(EMPTY));
+            
+            // Place initial pieces
+            board[3][3] = WHITE;
+            board[3][4] = BLACK;
+            board[4][3] = BLACK;
+            board[4][4] = WHITE;
+            
+            // Create visual board
+            boardElement.innerHTML = '';
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    boardElement.appendChild(cell);
+                }
+            }
+            
+            // Update the display
+            updateBoardDisplay();
+        }
+
+        // Update the visual representation of the board
+        function updateBoardDisplay() {
+            const cells = boardElement.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                
+                // Clear cell content
+                cell.innerHTML = '';
+                
+                // Add disc if needed
+                if (board[row][col] === BLACK) {
+                    const disc = document.createElement('div');
+                    disc.className = 'disc black';
+                    cell.appendChild(disc);
+                } else if (board[row][col] === WHITE) {
+                    const disc = document.createElement('div');
+                    disc.className = 'disc white';
+                    cell.appendChild(disc);
+                }
+            });
+            
+            // Update scores
+            const scores = countDiscs();
+            blackScoreElement.textContent = scores.black;
+            whiteScoreElement.textContent = scores.white;
+        }
+        
+        // Count discs of each color
+        function countDiscs() {
+            let black = 0;
+            let white = 0;
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if (board[row][col] === BLACK) {
+                        black++;
+                    } else if (board[row][col] === WHITE) {
+                        white++;
+                    }
+                }
+            }
+            
+            return { black, white };
+        }
+        
+
+        // Check if a move is valid
+        function isValidMove(row, col, player) {
+            // Must be an empty cell
+            if (board[row][col] !== EMPTY) {
+                return false;
+            }
+            
+            const opponent = player === BLACK ? WHITE : BLACK;
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+            
+            // Check in each direction
+            for (const [dr, dc] of directions) {
+                let r = row + dr;
+                let c = col + dc;
+                let foundOpponent = false;
+                
+                // Follow line of opponent pieces
+                while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === opponent) {
+                    foundOpponent = true;
+                    r += dr;
+                    c += dc;
+                }
+                
+                // If line ends with our piece, it's a valid move
+                if (foundOpponent && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // Get all valid moves for a player
+        function getValidMoves(player) {
+            const moves = [];
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if (isValidMove(row, col, player)) {
+                        moves.push({ row, col });
+                    }
+                }
+            }
+            
+            return moves;
+        }
+        
+        // Make a move
+        function makeMove(row, col, player) {
+            // Place the piece
+            board[row][col] = player;
+            
+            // Log the move
+            const playerName = player === BLACK ? "Black" : "White";
+            const colLetter = String.fromCharCode(97 + col); // 'a' through 'h'
+            const rowNumber = row + 1; // 1 through 8
+            const moveText = `${playerName}: ${colLetter}${rowNumber}`;
+            moveLog.push(moveText);
+            gameLogElement.innerHTML = moveLog.join('<br>');
+            gameLogElement.scrollTop = gameLogElement.scrollHeight;
+            
+            // Flip opponent pieces
+            const opponent = player === BLACK ? WHITE : BLACK;
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+            
+            for (const [dr, dc] of directions) {
+                let r = row + dr;
+                let c = col + dc;
+                const piecesToFlip = [];
+                
+                // Collect opponent pieces in this direction
+                while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === opponent) {
+                    piecesToFlip.push([r, c]);
+                    r += dr;
+                    c += dc;
+                }
+                
+                // If line ends with our piece, flip all collected pieces
+                if (piecesToFlip.length > 0 && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                    for (const [fr, fc] of piecesToFlip) {
+                        board[fr][fc] = player;
+                    }
+                }
+            }
+            
+            updateBoardDisplay();
+        }
+
+
+        
+        // Rename strategies to builtInStrategies (for clarity)
+        const builtInStrategies = {
+            // [KEEP ALL BUILT-IN STRATEGIES]
+            // random, greedy, corners, positional
+            // Random strategy - choose a random valid move
+            random: function(player) {
+                const validMoves = getValidMoves(player);
+                if (validMoves.length === 0) return null;
+                return validMoves[Math.floor(Math.random() * validMoves.length)];
+            },
+            
+            // Greedy strategy - maximize pieces flipped
+            greedy: function(player) {
+                const validMoves = getValidMoves(player);
+                if (validMoves.length === 0) return null;
+                
+                let bestMove = null;
+                let mostFlips = -1;
+                
+                for (const move of validMoves) {
+                    // Create board copy
+                    const tempBoard = board.map(row => [...row]);
+                    
+                    // Count flips for this move
+                    const opponent = player === BLACK ? WHITE : BLACK;
+                    let flips = 0;
+                    
+                    // Try the move and count flips
+                    tempBoard[move.row][move.col] = player;
+                    
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1],           [0, 1],
+                        [1, -1],  [1, 0],  [1, 1]
+                    ];
+                    
+                    for (const [dr, dc] of directions) {
+                        let r = move.row + dr;
+                        let c = move.col + dc;
+                        const piecesToFlip = [];
+                        
+                        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && tempBoard[r][c] === opponent) {
+                            piecesToFlip.push([r, c]);
+                            r += dr;
+                            c += dc;
+                        }
+                        
+                        if (piecesToFlip.length > 0 && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && tempBoard[r][c] === player) {
+                            flips += piecesToFlip.length;
+                        }
+                    }
+                    
+                    if (flips > mostFlips) {
+                        mostFlips = flips;
+                        bestMove = move;
+                    }
+                }
+                
+                return bestMove;
+            },
+            
+            // Corner strategy - prioritize corners and edges
+            corners: function(player) {
+                const validMoves = getValidMoves(player);
+                if (validMoves.length === 0) return null;
+                
+                // Check for corner moves first
+                const cornerMoves = validMoves.filter(move => 
+                    (move.row === 0 || move.row === 7) && (move.col === 0 || move.col === 7)
+                );
+                
+                if (cornerMoves.length > 0) {
+                    return cornerMoves[0];
+                }
+                
+                // Then check for edge moves
+                const edgeMoves = validMoves.filter(move => 
+                    move.row === 0 || move.row === 7 || move.col === 0 || move.col === 7
+                );
+                
+                if (edgeMoves.length > 0) {
+                    return edgeMoves[0];
+                }
+                
+                // Otherwise use greedy strategy
+                return builtInStrategies.greedy(player);
+            },
+            
+            // Positional strategy - uses weighted board positions
+            positional: function(player) {
+                const validMoves = getValidMoves(player);
+                if (validMoves.length === 0) return null;
+                
+                // Position weights - corners are best, edges next, avoid squares next to corners
+                const positionWeights = [
+                    [100, -20, 10, 5, 5, 10, -20, 100],
+                    [-20, -30, -5, -5, -5, -5, -30, -20],
+                    [10, -5, 1, 1, 1, 1, -5, 10],
+                    [5, -5, 1, 1, 1, 1, -5, 5],
+                    [5, -5, 1, 1, 1, 1, -5, 5],
+                    [10, -5, 1, 1, 1, 1, -5, 10],
+                    [-20, -30, -5, -5, -5, -5, -30, -20],
+                    [100, -20, 10, 5, 5, 10, -20, 100]
+                ];
+                
+                let bestMove = null;
+                let bestScore = -Infinity;
+                
+                for (const move of validMoves) {
+                    // Score based on position
+                    const positionScore = positionWeights[move.row][move.col];
+                    
+                    if (positionScore > bestScore) {
+                        bestScore = positionScore;
+                        bestMove = move;
+                    }
+                }
+                
+                return bestMove;
+            },
+
+            // Minmax strategy - uses minmax algorithm to find best move
+            minimax: function(player)
+            {
+                // board, player, getValidMoves, makeMove
+
+                function countDiscsLocal(boardIn)
+                {
+                    let black = 0;
+                    let white = 0;
+                    
+                    for (let row = 0; row < BOARD_SIZE; row++) {
+                        for (let col = 0; col < BOARD_SIZE; col++) {
+                            if (boardIn[row][col] === BLACK) {
+                                black++;
+                            } else if (boardIn[row][col] === WHITE) {
+                                white++;
+                            }
+                        }
+                    }
+                    
+                    return { black, white };
+                }
+
+                function makeMoveLocal(row, col, boardIn, player, opponent)
+                {
+                    let board_ = boardIn.map(row => [...row]);
+                    // Place the piece
+                    board_[row][col] = player;
+                    
+                    // Flip opponent pieces
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1],           [0, 1],
+                        [1, -1],  [1, 0],  [1, 1]
+                    ];
+                    
+                    for (const [dr, dc] of directions) {
+                        let r = row + dr;
+                        let c = col + dc;
+                        const piecesToFlip = [];
+                        
+                        // Collect opponent pieces in this direction
+                        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board_[r][c] === opponent) {
+                            piecesToFlip.push([r, c]);
+                            r += dr;
+                            c += dc;
+                        }
+                        
+                        // If line ends with our piece, flip all collected pieces
+                        if (piecesToFlip.length > 0 && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board_[r][c] === player) {
+                            for (const [fr, fc] of piecesToFlip) {
+                                board_[fr][fc] = player;
+                            }
+                        }
+                    }
+                    return board_;
+                }
+
+                function isValidMoveLocal(row, col, boardIn, player, opponent)
+                {
+                    // Must be an empty cell
+                    if (boardIn[row][col] !== EMPTY) {
+                        return false;
+                    }
+                    
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1],           [0, 1],
+                        [1, -1],  [1, 0],  [1, 1]
+                    ];
+                    
+                    // Check in each direction
+                    for (const [dr, dc] of directions) {
+                        let r = row + dr;
+                        let c = col + dc;
+                        let foundOpponent = false;
+                        
+                        // Follow line of opponent pieces
+                        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === opponent) {
+                            foundOpponent = true;
+                            r += dr;
+                            c += dc;
+                        }
+                        
+                        // If line ends with our piece, it's a valid move
+                        if (foundOpponent && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === player) {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                }
+
+                function getValidMovesLocal(player, opponent, boardIn)
+                {
+                    let moves_corner = [];
+                    let moves = [];
+                    
+                    for (let row = 0; row < BOARD_SIZE; row++)
+                    {
+                        for (let col = 0; col < BOARD_SIZE; col++)
+                        {
+                            if (isValidMoveLocal(row, col, boardIn, player, opponent))
+                            {
+                                if (isCornerMove(row, col))
+                                {
+                                    moves_corner.push({ row, col });
+                                }
+                                else
+                                {
+                                    moves.push({ row, col });
+                                }
+                            }
+                        }
+                    }
+                    if (moves_corner.length == 0)
+                    {
+                        return moves;
+                    }
+                    return moves_corner.concat(moves);
+                }
+                
+                function isCornerMove(row, col)
+                {
+                    return (row == 0 && col == 0) || (row == 0 && col == 7) || (row == 7 && col == 0) || (row == 7 && col == 7);
+                }
+
+                function minimax(boardIn, depth, alpha, beta, isMaximizing, player, opponent)
+                {
+                    const { black, white } = countDiscsLocal(boardIn);
+                    if (black + white > 60 || depth == 0)
+                    {
+                        if (player == BLACK)
+                        {
+                            return black - white;
+                        }
+                        else
+                        {
+                            return white - black;
+                        }
+                    }
+                    
+                    if (isMaximizing)
+                    {
+                        let validMoves = getValidMovesLocal(player, opponent, boardIn);
+                        let maxEval = -Infinity;
+                        for (const move of validMoves)
+                        {
+                            let board_ = makeMoveLocal(move.row, move.col, boardIn, player, opponent);
+                            if (isCornerMove(move.row, move.col))
+                            {
+                                return 48;
+                            }
+                            let eval = minimax(board_, depth - 1, alpha, beta, false, player, opponent);
+                            maxEval = Math.max(maxEval, eval);
+                            alpha = Math.max(alpha, eval);
+                            if (beta <= alpha)
+                            {
+                                return maxEval;
+                            }
+                        }
+                        return maxEval;
+                    }
+                    else
+                    {
+                        let validMoves = getValidMovesLocal(opponent, player, boardIn);
+                        let minEval = Infinity;
+                        for (const move of validMoves)
+                        {
+                            let board_ = makeMoveLocal(move.row, move.col, boardIn, opponent, player);
+                            if (isCornerMove(move.row, move.col))
+                            {
+                                return -48;
+                            }
+                            let eval = minimax(board_, depth - 1, alpha, beta, true, player, opponent);
+                            minEval = Math.min(minEval, eval);
+                            beta = Math.min(beta, eval);
+                            if (beta <= alpha)
+                            {
+                                return minEval;
+                            }
+                        }
+                        return minEval;
+                    }
+                }
+
+                let validMoves = getValidMoves(player);
+                let bestScore = -Infinity;
+                let bestMove = null;
+                let opponent = player == BLACK ? WHITE : BLACK;
+                for (const move of validMoves)
+                {
+                    let board_ = makeMoveLocal(move.row, move.col, board, player);
+                    let score = minimax(board_, 8, -Infinity, Infinity, false, player, opponent);
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestMove = move;
+                    }
+                }
+                return bestMove;
+            },
+
+            // Monte Carlo Tree Search strategy - uses MCTS algorithm to find best move
+            mcts_naive: function(player)
+            {
+                function countDiscsLocal(boardIn)
+                {
+                    let black = 0;
+                    let white = 0;
+                    
+                    for (let row = 0; row < BOARD_SIZE; row++) {
+                        for (let col = 0; col < BOARD_SIZE; col++) {
+                            if (boardIn[row][col] === BLACK) {
+                                black++;
+                            } else if (boardIn[row][col] === WHITE) {
+                                white++;
+                            }
+                        }
+                    }
+                    
+                    return { black, white };
+                }
+
+                function makeMoveLocal(row, col, boardIn, player, opponent)
+                {
+                    // Place the piece
+                    boardIn[row][col] = player;
+                    
+                    // Flip opponent pieces
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1],           [0, 1],
+                        [1, -1],  [1, 0],  [1, 1]
+                    ];
+                    
+                    for (const [dr, dc] of directions) {
+                        let r = row + dr;
+                        let c = col + dc;
+                        const piecesToFlip = [];
+                        
+                        // Collect opponent pieces in this direction
+                        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === opponent) {
+                            piecesToFlip.push([r, c]);
+                            r += dr;
+                            c += dc;
+                        }
+                        
+                        // If line ends with our piece, flip all collected pieces
+                        if (piecesToFlip.length > 0 && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === player) {
+                            for (const [fr, fc] of piecesToFlip) {
+                                boardIn[fr][fc] = player;
+                            }
+                        }
+                    }
+                }
+
+                function isValidMoveLocal(row, col, boardIn, player, opponent)
+                {
+                    // Must be an empty cell
+                    if (boardIn[row][col] !== EMPTY) {
+                        return false;
+                    }
+                    
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1],           [0, 1],
+                        [1, -1],  [1, 0],  [1, 1]
+                    ];
+                    
+                    // Check in each direction
+                    for (const [dr, dc] of directions) {
+                        let r = row + dr;
+                        let c = col + dc;
+                        let foundOpponent = false;
+                        
+                        // Follow line of opponent pieces
+                        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === opponent) {
+                            foundOpponent = true;
+                            r += dr;
+                            c += dc;
+                        }
+                        
+                        // If line ends with our piece, it's a valid move
+                        if (foundOpponent && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === player) {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                }
+
+                function getValidMovesLocal(player, opponent, boardIn)
+                {
+                    const moves = [];
+                    
+                    for (let row = 0; row < BOARD_SIZE; row++)
+                    {
+                        for (let col = 0; col < BOARD_SIZE; col++)
+                        {
+                            if (isValidMoveLocal(row, col, boardIn, player, opponent))
+                            {
+                                moves.push({ row, col });
+                            }
+                        }
+                    }
+                    
+                    return moves;
+                }
+                
+                function calculateMobility(boardIn, move, player, opponent)
+                {
+                    let board_ = boardIn.map(row => [...row]);
+                    makeMoveLocal(move.row, move.col, board_, player, opponent);
+                    const playerMoves = getValidMovesLocal(player, opponent, board_).length;
+                    const opponentMoves = getValidMovesLocal(opponent, player, board_).length;
+                    
+                    return Math.round((playerMoves / (playerMoves + opponentMoves)) * 100);
+                }
+                
+                function getWeightedRandomMove(validMoves)
+                {
+                    const positionWeights = [
+                        [100, 10, 80, 40, 40, 80, 10, 100],
+                        [10,   8, 20, 20, 20, 20,  8,  10],
+                        [80,  20, 40, 40, 40, 40, 20,  80],
+                        [40,  20, 40, 40, 40, 40, 20,  40],
+                        [40,  20, 40, 40, 40, 40, 20,  40],
+                        [80,  20, 40, 40, 40, 40, 20,  80],
+                        [10,   8, 20, 20, 20, 20,  8,  10],
+                        [100, 10, 80, 40, 40, 80, 10, 100],
+                    ];
+                    
+                    for (const move of validMoves)
+                    {
+                        positionWeights[move.row][move.col] += calculateMobility(board, move, player, player);
+                    }
+
+                    // Calculate weights for all valid moves
+                    const moveWeights = validMoves.map(move => positionWeights[move.row][move.col]);
+                    const totalWeight = moveWeights.reduce((sum, weight) => sum + weight, 0);
+
+                    // Select move based on weight distribution
+                    let randomValue = Math.random() * totalWeight;
+                    let weightSum = 0;
+
+                    for (let i = 0; i < validMoves.length; i++)
+                    {
+                        weightSum += moveWeights[i];
+                        if (randomValue <= weightSum)
+                            return validMoves[i];
+                    }
+
+                    // Fallback
+                    return validMoves[0];
+                }
+
+                function randomPlayout(boardIn, player, opponent)
+                {
+                    let board_ = boardIn.map(row => [...row]);
+                    let playerOnTurn = opponent;
+                    let playerNotOnTurn = player;
+                    let maxDepth = 60;
+                    let depth = 0;
+                    while (depth <= maxDepth)
+                    {
+                        let validMoves = getValidMovesLocal(playerOnTurn, playerNotOnTurn, board_);
+                        if (validMoves.length == 0)
+                        {
+                            validMoves = getValidMovesLocal(playerNotOnTurn, playerOnTurn, board_);
+                            if (validMoves.length == 0)
+                            {
+                                break;
+                            }
+                        }
+                        // let move = validMoves[Math.floor(Math.random() * validMoves.length)];
+                        let move = getWeightedRandomMove(validMoves);
+                        makeMoveLocal(move.row, move.col, board_, playerOnTurn, playerNotOnTurn);
+
+                        let temp = playerOnTurn;
+                        playerOnTurn = playerNotOnTurn;
+                        playerNotOnTurn = temp;
+                        depth++;
+                    }
+
+                    const { black, white } = countDiscsLocal(board_);
+                    if (player == BLACK)
+                    {
+                        return black > white ? 1 : -1;
+                    }
+                    return black > white ? -1 : 1;
+                }
+
+                function mcts(boardIn, player, opponent, timeLimit)
+                {
+                    console.log(`Random MCTS running...`);
+                    const validMoves = getValidMovesLocal(player, opponent, boardIn);
+                    const timePerMove = timeLimit / validMoves.length;
+                    
+                    let bestMove = null;
+                    let bestWinRate = -1;
+                    let totalGamesCount = 0;
+                    
+                    for (move of validMoves)
+                    {
+                        const startTime = Date.now();
+                        let board_ = boardIn.map(row => [...row]);
+                        makeMoveLocal(move.row, move.col, board_, player, opponent);
+                        let score = 0;
+                        let wins = 0;
+                        let losses = 0;
+                        while (Date.now() - startTime < timePerMove * 1000)
+                        {
+                            randomPlayout(board_, player, opponent) == 1 ? wins++ : losses++
+                            totalGamesCount++;
+                        }
+
+                        winRate = wins / (wins + losses);
+                        if (winRate > bestWinRate)
+                        {
+                            bestWinRate = winRate
+                            bestMove = move;
+                        }
+                        // console.log(`Win %: ${winRate.toFixed(4)}, # wins: ${wins}, # losses: ${losses}, # of games: ${wins + losses}, move: (${move.row}, ${move.col})\n`);
+                    }
+                    if (bestMove == null)
+                    {
+                        console.log(`[Random] No valid moves available\n`);
+                        return null;
+                    }
+                    console.log(`[Random, ${timeLimit}s] Best win %: ${(100 * bestWinRate).toFixed(2)}, Total # of games: ${totalGamesCount}, Best move: (${bestMove.row}, ${bestMove.col})\n`);
+                    return bestMove;
+                }
+
+                let opponent = player == BLACK ? WHITE : BLACK;
+
+                return mcts(board, player, opponent, 4);
+            },
+
+            // Monte Carlo Tree Search strategy - uses MCTS algorithm and some heuristics to find best move
+            mcts_heuristic_slow: function(player)
+            {
+                function countDiscsLocal(boardIn)
+                {
+                    let black = 0;
+                    let white = 0;
+                    
+                    for (let row = 0; row < BOARD_SIZE; row++) {
+                        for (let col = 0; col < BOARD_SIZE; col++) {
+                            if (boardIn[row][col] === BLACK) {
+                                black++;
+                            } else if (boardIn[row][col] === WHITE) {
+                                white++;
+                            }
+                        }
+                    }
+                    
+                    return { black, white };
+                }
+
+                function countFreeSpaces(boardIn)
+                {
+                    let freeSpaces = 0;
+                    for (let row = 0; row < BOARD_SIZE; row++)
+                    {
+                        for (let col = 0; col < BOARD_SIZE; col++)
+                        {
+                            if (boardIn[row][col] === EMPTY)
+                            freeSpaces++;
+                        }
+                    }
+                    return freeSpaces;
+                }
+
+                function makeMoveLocal(row, col, boardIn, player, opponent)
+                {
+                    // Place the piece
+                    boardIn[row][col] = player;
+                    
+                    // Flip opponent pieces
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1],           [0, 1],
+                        [1, -1],  [1, 0],  [1, 1]
+                    ];
+                    
+                    for (const [dr, dc] of directions)
+                    {
+                        let r = row + dr;
+                        let c = col + dc;
+                        const piecesToFlip = [];
+                        
+                        // Collect opponent pieces in this direction
+                        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === opponent)
+                        {
+                            piecesToFlip.push([r, c]);
+                            r += dr;
+                            c += dc;
+                        }
+                        
+                        // If line ends with our piece, flip all collected pieces
+                        if (piecesToFlip.length > 0 && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === player)
+                        {
+                            for (const [fr, fc] of piecesToFlip)
+                                boardIn[fr][fc] = player;
+                        }
+                    }
+                }
+
+                function isValidMoveLocal(row, col, boardIn, player, opponent)
+                {
+                    // Must be an empty cell
+                    if (boardIn[row][col] !== EMPTY)
+                        return false;
+                    
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1],           [0, 1],
+                        [1, -1],  [1, 0],  [1, 1]
+                    ];
+                    
+                    // Check in each direction
+                    for (const [dr, dc] of directions)
+                    {
+                        let r = row + dr;
+                        let c = col + dc;
+                        let foundOpponent = false;
+                        
+                        // Follow line of opponent pieces
+                        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === opponent)
+                        {
+                            foundOpponent = true;
+                            r += dr;
+                            c += dc;
+                        }
+                        
+                        // If line ends with our piece, it's a valid move
+                        if (foundOpponent && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardIn[r][c] === player)
+                        {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                }
+
+                function getValidMovesLocal(player, opponent, boardIn)
+                {
+                    const moves = [];
+                    
+                    for (let row = 0; row < BOARD_SIZE; row++)
+                    {
+                        for (let col = 0; col < BOARD_SIZE; col++)
+                        {
+                            if(isValidMoveLocal(row, col, boardIn, player, opponent))
+                                moves.push({ row, col });
+                        }
+                    }
+                    
+                    return moves;
+                }
+                
+                function calculateMobility(boardIn, move, player, opponent)
+                {
+                    let board_ = boardIn.map(row => [...row]);
+                    makeMoveLocal(move.row, move.col, board_, player, opponent);
+                    const playerMoves = getValidMovesLocal(player, opponent, board_).length;
+                    const opponentMoves = getValidMovesLocal(opponent, player, board_).length;
+                    
+                    return Math.round((playerMoves / (playerMoves + opponentMoves)) * 100);
+                }
+
+                // Find all connected empty cells in a region using flood fill
+                function calculateParityRegion(boardIn, startRow, startCol)
+                {
+                    const visited = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(false));
+                    let regionSize = 0;
+                    
+                    // Define a recursive flood fill function
+                    function floodFill(row, col)
+                    {
+                        // Check bounds and if the cell is empty and not visited
+                        if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE || 
+                            boardIn[row][col] !== EMPTY || visited[row][col])
+                            return;
+                        
+                        // Mark as visited and count
+                        visited[row][col] = true;
+                        regionSize++;
+                        
+                        // Explore all 8 directions
+                        const directions = [
+                            [-1, -1], [-1, 0], [-1, 1],
+                            [0, -1],          [0, 1],
+                            [1, -1],  [1, 0], [1, 1]
+                        ];
+                        
+                        for (const [dr, dc] of directions)
+                            floodFill(row + dr, col + dc);
+                    }
+                    
+                    floodFill(startRow, startCol);
+                    if (regionSize % 2 == 1)
+                        return 10;
+                    return -10;
+                }
+                
+                function getWeightedRandomMove(boardIn, validMoves, playerOnTurn, playerNotOnTurn)
+                {
+                    const positionWeights = [
+                        [100, 10, 80, 40, 40, 80, 10, 100],
+                        [10,   8, 20, 20, 20, 20,  8,  10],
+                        [80,  20, 40, 40, 40, 40, 20,  80],
+                        [40,  20, 40, 40, 40, 40, 20,  40],
+                        [40,  20, 40, 40, 40, 40, 20,  40],
+                        [80,  20, 40, 40, 40, 40, 20,  80],
+                        [10,   8, 20, 20, 20, 20,  8,  10],
+                        [100, 10, 80, 40, 40, 80, 10, 100],
+                    ];
+                    
+                    // Calculate weights for all valid moves
+                    const moveWeights = validMoves.map(move => positionWeights[move.row][move.col]);
+                    const totalWeight = moveWeights.reduce((sum, weight) => sum + weight, 0);
+
+                    // Select move based on weight distribution
+                    let randomValue = Math.random() * totalWeight;
+                    let weightSum = 0;
+
+                    for (let i = 0; i < validMoves.length; i++)
+                    {
+                        weightSum += moveWeights[i];
+                        if (randomValue <= weightSum)
+                            return validMoves[i];
+                    }
+
+                    // Fallback
+                    console.log("\n--------Should never happen--------\n")
+                    return validMoves[0];
+                }
+
+                function randomPlayout(boardIn, player, opponent)
+                {
+                    let board_ = boardIn.map(row => [...row]);
+                    let playerOnTurn = opponent;
+                    let playerNotOnTurn = player;
+                    let maxDepth = 60;
+                    let depth = 0;
+                    let freeSpaces = countFreeSpaces(boardIn);
+                    while (depth <= maxDepth)
+                    {
+                        // let validMoves = getValidMovesLocal2(playerOnTurn, playerNotOnTurn, board_);
+                        let validMoves = getValidMovesLocal(playerOnTurn, playerNotOnTurn, board_);
+                        if (validMoves.length == 0)
+                        {
+                            let temp = playerOnTurn;
+                            playerOnTurn = playerNotOnTurn;
+                            playerNotOnTurn = temp;
+                            validMoves = getValidMovesLocal(playerOnTurn, playerNotOnTurn, board_);
+                            // validMoves = getValidMovesLocal2(playerOnTurn, playerNotOnTurn, board_);
+                            if (validMoves.length == 0)
+                                break;
+                        }
+
+                        let move = getWeightedRandomMove(boardIn, validMoves, playerOnTurn, playerNotOnTurn);
+                        // let move = getWeightedRandomMove2(boardIn, validMoves, playerOnTurn, playerNotOnTurn);
+
+                        makeMoveLocal(move.row, move.col, board_, playerOnTurn, playerNotOnTurn);
+                        // makeMoveLocal2(move, board_, playerOnTurn, playerNotOnTurn);
+                        freeSpaces--;
+
+                        let temp = playerOnTurn;
+                        playerOnTurn = playerNotOnTurn;
+                        playerNotOnTurn = temp;
+                        depth++;
+                    }
+
+                    const { black, white } = countDiscsLocal(board_);
+                    if (player == BLACK)
+                    {
+                        return black > white ? 1 : -1;
+                    }
+                    return black > white ? -1 : 1;
+                }
+
+                function mcts(boardIn, validMoves, player, opponent, timeLimit, numMovesToReturn, verbose)
+                {
+                    if (verbose)
+                        console.log(`Heuristic MCTS running...`);
+                    let moveScores = [];
+                    const timePerMove = timeLimit / validMoves.length;
+                    
+                    let bestWinRate = -1;
+                    let totalGamesCount = 0;
+                    
+                    for (const move of validMoves)
+                    {
+                        const startTime = Date.now();
+                        let board_ = boardIn.map(row => [...row]);
+                        makeMoveLocal(move.row, move.col, board_, player, opponent);
+                        let wins = 0;
+                        let losses = 0;
+                        while (Date.now() - startTime < timePerMove * 1000)
+                        {
+                            randomPlayout(board_, player, opponent) == 1 ? wins++ : losses++
+                            totalGamesCount++;
+                        }
+
+                        winRate = wins / (wins + losses);
+                        moveScores.push({
+                            move,
+                            winRate
+                        });
+                        
+                        if (winRate > bestWinRate)
+                            bestWinRate = winRate
+                        // console.log(`Win %: ${winRate.toFixed(4)}, # wins: ${wins}, # losses: ${losses}, # of games: ${wins + losses}, move: (${move.row}, ${move.col})\n`);
+                    }
+
+                    if (verbose)
+                        console.log(`[Heuristic, ${timeLimit}s] Best win %: ${(100 * bestWinRate).toFixed(2)}, Total # of games: ${totalGamesCount}\n`);
+                    if (moveScores.length == 0)
+                    {
+                        console.log(`[Heuristic, ${timeLimit}s] No valid moves available\n`);
+                        return null;
+                    }
+                    moveScores.sort((a, b) => b.winRate - a.winRate);
+                    return moveScores.slice(0, Math.min(numMovesToReturn, moveScores.length)).map(item => item.move);
+                }
+
+                const timeLimitTotal = 0.05;
+                const timeLimit1 = 0.4 * timeLimitTotal;
+                const timeLimit2 = 0.6 * timeLimitTotal;
+                let opponent = player == BLACK ? WHITE : BLACK;
+                const validMoves = getValidMovesLocal(player, opponent, board);
+                console.log(`Valid moves: ${validMoves.length}`);
+                if (validMoves.length == 0)
+                {
+                    console.log(`[Heuristic] No valid moves available\n`);
+                    return null;
+                }
+                else if (validMoves.length <= 5)
+                    return mcts(board, validMoves, player, opponent, timeLimit2, 1, true)[0];
+                
+                top3Moves = mcts(board, validMoves, player, opponent, timeLimit1, 3, false);
+                return mcts(board, top3Moves, player, opponent, timeLimit2, 1, true)[0];
+            },
+
+            mcts: function(player)
+            {
+                class MCTSNode
+                {
+                    constructor(board, move, playerOnTurn, playerNotOnTurn, parent)
+                    {
+                        this.board = board.map(row => [...row]);
+                        this.move = move;
+                        this.playerOnTurn = playerOnTurn;
+                        this.playerNotOnTurn = playerNotOnTurn;
+                        this.parent = parent;
+                        this.simulations = 0;
+                        this.wins = 0;
+                        this.children = [];
+                        this.terminalState = this.isTerminal();
+                        this.untriedMoves = this.getValidMoves(playerOnTurn);
+                        this.expParam = this.expParam();
+
+                        this.amafSimulations = {}; // Maps "row,col" to simulation count
+                        this.amafWins = {};
+                    }
+
+                    getValidMoves(player)
+                    {
+                        const moves = [];
+                        
+                        for (let row = 0; row < BOARD_SIZE; row++)
+                        {
+                            for (let col = 0; col < BOARD_SIZE; col++)
+                            {
+                                if (this.isValidMove(row, col, player))
+                                    moves.push({ row, col });
+                            }
+                        }
+
+                        if (! this.terminalState && moves.length == 0)
+                        {
+                            // console.log("No possible moves -> adding pass");
+                            moves.push({row: -1, col: -1});
+                        }
+                        // console.log(`[${this.move.row}, ${this.move.col}] Calculated ${moves.length} valid moves`);
+                        return moves;
+                    }
+
+                    isValidMove(row, col, player)
+                    {
+                        const opponent = player == BLACK ? WHITE : BLACK
+                        // Must be an empty cell
+                        if (this.board[row][col] !== EMPTY)
+                            return false;
+                        
+                        const directions = [
+                            [-1, -1], [-1, 0], [-1, 1],
+                            [0, -1],           [0, 1],
+                            [1, -1],  [1, 0],  [1, 1]
+                        ];
+                        
+                        // Check in each direction
+                        for (const [dr, dc] of directions)
+                        {
+                            let r = row + dr;
+                            let c = col + dc;
+                            let foundOpponent = false;
+                            
+                            // Follow line of opponent pieces
+                            while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && this.board[r][c] === opponent)
+                            {
+                                foundOpponent = true;
+                                r += dr;
+                                c += dc;
+                            }
+                            
+                            // If line ends with our piece, it's a valid move
+                            if (foundOpponent && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && this.board[r][c] === player)
+                                return true;
+                        }
+                        
+                        return false;
+                    }
+                
+                    makeMove(move)
+                    {
+                        const row = move.row;
+                        const col = move.col;
+                        if (row == -1 && col == -1)
+                            return;
+                        // let boardNew = this.board.map(row => [...row]);
+                        // Place the piece
+                        this.board[row][col] = this.playerOnTurn;
+                        
+                        // Flip opponent pieces
+                        const directions = [
+                            [-1, -1], [-1, 0], [-1, 1],
+                            [0, -1],           [0, 1],
+                            [1, -1],  [1, 0],  [1, 1]
+                        ];
+                        
+                        for (const [dr, dc] of directions)
+                        {
+                            let r = row + dr;
+                            let c = col + dc;
+                            const piecesToFlip = [];
+                            
+                            // Collect opponent pieces in this direction
+                            while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && this.board[r][c] === this.playerNotOnTurn)
+                            {
+                                piecesToFlip.push([r, c]);
+                                r += dr;
+                                c += dc;
+                            }
+                            
+                            // If line ends with our piece, flip all collected pieces
+                            if (piecesToFlip.length > 0 && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && this.board[r][c] === this.playerOnTurn)
+                            {
+                                for (const [fr, fc] of piecesToFlip)
+                                this.board[fr][fc] = this.playerOnTurn;
+                            }
+                        }
+                    }
+                    
+                    countDiscs()
+                    {
+                        let black = 0;
+                        let white = 0;
+                        
+                        for (let row = 0; row < BOARD_SIZE; row++)
+                        {
+                            for (let col = 0; col < BOARD_SIZE; col++)
+                                this.board[row][col] === BLACK ? black++ : white++
+                        }
+                        
+                        return { black, white };
+                    }
+
+                    expParam()
+                    {
+                        let freeSpaces = 0;
+                        
+                        for (let row = 0; row < BOARD_SIZE; row++)
+                        {
+                            for (let col = 0; col < BOARD_SIZE; col++)
+                            {
+                                if (this.board[row][col] == EMPTY)
+                                freeSpaces++;
+                            }
+                        }
+                        
+                        if (freeSpaces > 42)
+                            return 2;
+                        if (freeSpaces > 20)
+                            return 1.5;
+                        return 0.8;
+                    }
+
+                    isTerminal()
+                    {
+                        return this.getValidMoves(WHITE).length == 0 && this.getValidMoves(BLACK).length == 0;
+                    }
+                
+                    canExpand()
+                    {
+                        // console.log(`[${this.move.row}, ${this.move.col}] isLeaf ${this.untriedMoves}`)
+                        return this.untriedMoves.length > 0;
+                        // return this.children.length == 0;
+                    }
+
+                    // calculateUCB(child)
+                    // {
+                    //     if (this.simulations == 0)
+                    //         console.error("this.simulations == 0");
+                        
+                    //     const eps = 0.00001;
+                    //     return child.wins / (child.simulations + eps) +
+                    //             this.expParam * Math.sqrt(Math.log(this.simulations + eps) / (child.simulations + eps));
+                    // }
+
+                    calculateUCB(child)
+                    {
+                        if (this.simulations == 0)
+                            console.error("this.simulations == 0");
+                        
+                        const eps = 0.00001;
+                        const moveKey = `${child.move.row},${child.move.col}`;
+                        
+                        // Regular UCB value
+                        const ucbValue = child.wins / (child.simulations + eps) +
+                                this.expParam * Math.sqrt(Math.log(this.simulations + eps) / (child.simulations + eps));
+                        
+                        // RAVE value
+                        let raveValue = 0.5; // Default to 0.5 if no RAVE data
+                        if (this.amafSimulations[moveKey] && this.amafSimulations[moveKey] > 0)
+                            raveValue = this.amafWins[moveKey] / this.amafSimulations[moveKey];
+                        
+                        // Calculate beta (balance between UCB and RAVE)
+                        // As more regular simulations occur, rely more on regular UCB
+                        const k = 1000; // Parameter controlling crossover point
+                        const beta = Math.sqrt(k / (3 * child.simulations + k));
+                        
+                        // Combined value (beta * RAVE + (1-beta) * UCB)
+                        return (1 - beta) * ucbValue + beta * raveValue;
+                    }
+
+                    selectChild()
+                    {
+                        // console.log(`[${this.move.row}, ${this.move.col}] Selecting child`);
+                        // console.log(`[${this.move.row}, ${this.move.col}]     # children: ${this.children.length}`);
+                        
+                        if (this.children.length == 0)
+                        {
+                            console.error("this.children.length == 0, this.terminalState: ", this.terminalState);
+                            console.log("Returning new expanded child");   
+                            return this.expand();
+                        }
+
+                        let bestChild = null;
+                        let bestUCB = -Infinity;
+                        for (const child of this.children)
+                        {
+                            const currentUCB = this.calculateUCB(child);
+                            if (currentUCB > bestUCB)
+                            {
+                                bestUCB = currentUCB;
+                                bestChild = child;
+                            }
+                        }
+                        if (bestChild == null)
+                            console.error("Best child is none");
+                        return bestChild;
+                    }
+                
+                    expand()
+                    {
+                        // console.log(`[${this.move.row}, ${this.move.col}] Expanding`);
+                        if (this.terminalState == true || this.untriedMoves.length == 0)
+                            return null;
+
+                        const idx = Math.floor(Math.random() * this.untriedMoves.length)
+                        const move = this.untriedMoves[idx];
+
+                        this.untriedMoves.splice(idx, 1);
+
+                        let boardCopy = this.board.map(row => [...row]);
+                        this.makeMove(move);
+                        
+                        let newChild = new MCTSNode(this.board, move, this.playerNotOnTurn, this.playerOnTurn, this);
+                        
+                        this.board = boardCopy;
+                        this.children.push(newChild);
+    
+                        return newChild;
+                    }
+                
+                    simulate()
+                    {
+                        // console.log(`[${this.move.row}, ${this.move.col}] Simulating`);
+                        let boardCopy = this.board.map(row => [...row]);
+                        let playerOnTurnCopy = this.playerOnTurn;
+                        let playerNotOnTurnCopy = this.playerNotOnTurn;
+                        
+                        const movesPlayed = new Set();
+                        
+                        while (true)
+                        {
+                            let validMoves = this.getValidMoves(this.playerOnTurn);
+                            if (validMoves.length == 0 || (validMoves[0].row == -1 && validMoves[0].col == -1))
+                            {
+                                let temp = this.playerOnTurn;
+                                this.playerOnTurn = this.playerNotOnTurn;
+                                this.playerNotOnTurn = temp;
+                                validMoves = this.getValidMoves(this.playerOnTurn);
+                                if (validMoves.length == 0 || (validMoves[0].row == -1 && validMoves[0].col == -1))
+                                    break;
+                            }
+
+                            const positionWeights = [
+                                [100, 10, 80, 40, 40, 80, 10, 100],
+                                [10,   8, 20, 20, 20, 20,  8,  10],
+                                [80,  20, 40, 40, 40, 40, 20,  80],
+                                [40,  20, 40, 40, 40, 40, 20,  40],
+                                [40,  20, 40, 40, 40, 40, 20,  40],
+                                [80,  20, 40, 40, 40, 40, 20,  80],
+                                [10,   8, 20, 20, 20, 20,  8,  10],
+                                [100, 10, 80, 40, 40, 80, 10, 100],
+                            ];
+                    
+                            const moveWeights = validMoves.map(move => positionWeights[move.row][move.col]);
+                            const totalWeight = moveWeights.reduce((sum, weight) => sum + weight, 0);
+
+                            // Select move based on weight distribution
+                            let randomValue = Math.random() * totalWeight;
+                            let weightSum = 0;
+
+                            let move = null;
+                            for (let i = 0; i < validMoves.length; i++)
+                            {
+                                weightSum += moveWeights[i];
+                                if (randomValue <= weightSum)
+                                {
+                                    move = validMoves[i];
+                                    break;   
+                                }
+                            }
+
+                            // let move = validMoves[Math.floor(Math.random() * validMoves.length)];
+
+                            const currentPlayer = this.playerOnTurn;
+                            movesPlayed.add(`${move.row},${move.col},${currentPlayer}`);
+
+                            this.makeMove(move);
+
+                            let temp = this.playerOnTurn;
+                            this.playerOnTurn = this.playerNotOnTurn;
+                            this.playerNotOnTurn = temp;
+                        }
+
+                        const { black, white } = this.countDiscs();
+
+                        this.board = boardCopy.map(row => [...row]);
+                        this.playerOnTurn = playerOnTurnCopy;
+                        this.playerNotOnTurn = playerNotOnTurnCopy;
+
+                        let result = 1;
+                        if (this.playerOnTurn == BLACK)
+                            result = black > white ? 1 : -1
+                        else
+                            result = black > white ? -1 : 1;
+                        return { result, movesPlayed }
+                    }
+                }
+
+                function boardsAreEqual(board1, board2)
+                {
+                    for (let row = 0; row < BOARD_SIZE; row++)
+                    {
+                        for (let col = 0; col < BOARD_SIZE; col++)
+                        {
+                            if (board1[row][col] != board2[row][col])
+                                return false;
+                        }
+                    }
+                    return true;
+                }
+
+                function getLeafNode(rootNode)
+                {
+                    // console.log(`Selecting leaf node from [${rootNode.move.row}, ${rootNode.move.col}]`);
+                    let node = rootNode;
+                    while (! node.terminalState && ! node.canExpand())
+                    {  
+                        // console.log(`Selecting leaf node from [${node.move.row}, ${node.move.col}]`);
+                        node = node.selectChild();
+                    }
+                    return node;
+                }
+
+                function backpropagate(node, result, movesPlayed)
+                {
+                    // console.log("Backpropagating");
+                    while (node != null)
+                    {
+                        node.simulations++;
+
+                        if (result == 1)
+                            node.wins++;
+
+                        for (const moveInfo of movesPlayed)
+                        {
+                            const [row, col, playerWhoMoved] = moveInfo.split(',').map(x => parseInt(x));
+                            
+                            // Only update AMAF if this move was made by the player on turn at this node
+                            if (playerWhoMoved === node.playerOnTurn)
+                            {
+                                const moveKey = `${row},${col}`;
+                                
+                                // Initialize if needed
+                                if (!node.amafSimulations[moveKey])
+                                {
+                                    node.amafSimulations[moveKey] = 0;
+                                    node.amafWins[moveKey] = 0;
+                                }
+                                
+                                // Update counts
+                                node.amafSimulations[moveKey]++;
+                                if (result == 1)
+                                    node.amafWins[moveKey]++;
+                            }
+                        }
+
+                        result = -result;
+                        
+                        node = node.parent;
+                    }
+                }
+
+                function run_mcts(rootNode, timeLimit)
+                {
+                    console.log("Classic MCTS running...");
+                    // const A = 42;
+                    console.log("Untried moves: ", rootNode.untriedMoves.length, " / children: ", rootNode.children.length);
+                    const startTime = Date.now();
+                    while (Date.now() - startTime < timeLimit * 1000)
+                    {
+                        // console.log("\nswag");
+                        let leafNode = getLeafNode(rootNode);
+                        let childNode = leafNode.expand()
+
+                        if (childNode == null)
+                        {
+                            console.error("Child node null");
+                            // let result = leafNode.simulate();
+                            // backpropagate(leafNode, result);
+                            const { result, movesPlayed } = leafNode.simulate();
+                            backpropagate(leafNode, result, movesPlayed);
+                            continue;
+                        }
+                        
+                        // let result = childNode.simulate();
+                        // backpropagate(childNode, result);
+                        const { result, movesPlayed } = childNode.simulate();
+                        backpropagate(leafNode, result, movesPlayed);
+                    }
+
+                    if (rootNode.children[0].move.row == -1 && rootNode.children[0].move.col == -1)
+                    {
+                        console.error("No available moves? children size: ", rootNode.children.length, ", untried moves size: ", rootNode.untriedMoves.length);
+                        return rootNode.children[0];
+                    }
+
+                    let bestChild = null;
+                    let bestSimulationPortion = 0;
+                    let bestWinrate = 0;
+                    let bestValue = 0;
+                    for (const child of rootNode.children)
+                    {
+                        let simulationPortion = child.simulations / rootNode.simulations;
+                        let winrate = 1 - (child.wins / child.simulations);
+                        let value = 0.96 * winrate + 0.04 * simulationPortion
+                        if (value > bestValue)
+                        {
+                            bestChild = child;
+                            bestValue = value;
+                            bestSimulationPortion = simulationPortion;
+                            bestWinrate = winrate;
+                        }
+                        console.log(`   Value: ${value.toFixed(2)}, win %: ${(100 * winrate).toFixed(2)}, % of sims: ${(100 * simulationPortion).toFixed(2)}, child # sims: ${child.simulations}, root # sims: ${rootNode.simulations}`);
+                    }
+                    console.log(`[MCTS, ${timeLimit}s] Best Value: ${bestValue.toFixed(2)}, win %: ${(100 * bestWinrate).toFixed(2)}, Portion of games: ${bestSimulationPortion.toFixed(2)}, total # of games: ${rootNode.simulations}\n`);
+                    return bestChild;
+                }
+
+                const timeLimit = 3;
+                const opponent = player == WHITE ? BLACK : WHITE;
+
+                if (! this.rootNode)
+                {
+                    console.log("Creating a new tree");
+                    this.rootNode = new MCTSNode(board, {row: 42, col: 42}, player, opponent, null);
+                    this.rootNode = run_mcts(this.rootNode, timeLimit);
+                    if (this.rootNode.move.row == -1 && this.rootNode.move.col == -1)
+                        return null
+                    return this.rootNode.move;
+                }
+                else
+                {
+                    console.log("Tree already exists");
+                    console.log("Untried moves: ", this.rootNode.untriedMoves.length, " / children: ", this.rootNode.children.length);
+                    console.log("# simulations: ", this.rootNode.simulations);
+                }
+                
+                let foundMatchingBoard = false;
+                for (const child of this.rootNode.children)
+                {
+                    if (boardsAreEqual(board, child.board))
+                    {
+                        console.log("Found matching board")
+                        this.rootNode = child;
+                        foundMatchingBoard = true;
+                        break;
+                    }
+                }
+
+                if (! foundMatchingBoard)
+                {
+                    console.log("Creating a new tree because no matching board was found");
+                    this.rootNode = new MCTSNode(board, {row: 42, col: 42}, player, opponent, null);
+                    this.rootNode = run_mcts(this.rootNode, timeLimit);
+                    if (this.rootNode.move.row == -1 && this.rootNode.move.col == -1)
+                        return null
+                    return this.rootNode.move;
+                }
+
+                this.rootNode = run_mcts(this.rootNode, timeLimit);
+                if (this.rootNode.move.row == -1 && this.rootNode.move.col == -1)
+                    return null
+                return this.rootNode.move;
+            },
+
+            expert: function(player)
+            {
+                function makeExpertAIMove(validMoves)
+                {
+                    console.log(`Expert AI running...`);
+                    // If it's early game (first 10 moves), use opening book strategies
+                    const totalDiscs = countDiscs().black + countDiscs().white;
+                    if (totalDiscs < 12)
+                    {
+                        console.log(`[Expert] Early game`);
+                        return makeOpeningBookMove(validMoves);
+                    }
+                    
+                    // If it's endgame (last 16 or fewer empty spaces), use deeper search
+                    const emptySpaces = 64 - totalDiscs;
+                    if (emptySpaces <= 16)
+                    {
+                        console.log(`[Expert] Endgame`);
+                        return findBestMoveAlphaBeta(4); // Deeper search for endgame
+                    }
+                    
+                    // For midgame, use a balance of strategy and lookahead
+                    console.log(`[Expert] Midgame`);
+                    return findBestMoveAlphaBeta(2);
+                }
+
+                // Opening book for common strong first moves
+                function makeOpeningBookMove(validMoves)
+                {
+                    // Strategic initial moves (focusing on mobility and avoiding dangerous squares)
+                    const preferredMoves = [
+                        // Format: [row, col, priority]
+                        // Prioritize moves that increase mobility
+                        [2, 4, 10], [3, 5, 10], [4, 2, 10], [5, 3, 10], // Classic strong openings
+                        [2, 3, 8], [3, 2, 8], [4, 5, 8], [5, 4, 8],     // Also good openings
+                        [2, 2, 5], [2, 5, 5], [5, 2, 5], [5, 5, 5]      // Acceptable but less preferred
+                    ];
+                    
+                    // Avoid X-squares and C-squares early in the game
+                    const dangerousMoves = [
+                        [0, 1], [1, 0], [1, 1], // C-squares and X-squares near top-left
+                        [0, 6], [1, 6], [1, 7], // C-squares and X-squares near top-right
+                        [6, 0], [6, 1], [7, 1], // C-squares and X-squares near bottom-left
+                        [6, 6], [6, 7], [7, 6]  // C-squares and X-squares near bottom-right
+                    ];
+                    
+                    // Always take a corner if available
+                    for (const move of validMoves) {
+                        if ((move.row === 0 || move.row === 7) && (move.col === 0 || move.col === 7)) {
+                            return move;
+                        }
+                    }
+                    
+                    // Check for preferred moves from the opening book
+                    let bestMove = null;
+                    let bestPriority = -1;
+                    
+                    for (const move of validMoves) {
+                        // Skip dangerous moves early in the game
+                        if (dangerousMoves.some(([r, c]) => r === move.row && c === move.col)) {
+                            continue;
+                        }
+                        
+                        // Check if this move is in our preferred list
+                        for (const [r, c, priority] of preferredMoves) {
+                            if (r === move.row && c === move.col && priority > bestPriority) {
+                                bestMove = move;
+                                bestPriority = priority;
+                            }
+                        }
+                    }
+                    
+                    // If we found a good move from our opening book, use it
+                    if (bestMove) {
+                        return bestMove;
+                    }
+                    
+                    // Otherwise, use the regular strategy evaluation
+                    return findBestMoveAlphaBeta(2);
+                }
+
+                // Find the best move using Minimax with Alpha-Beta Pruning
+                function findBestMoveAlphaBeta(depth) {
+                    const validMoves = getValidMoves(WHITE);
+                    let bestScore = -Infinity;
+                    let bestMove = null;
+                    let alpha = -Infinity;
+                    let beta = Infinity;
+                    
+                    // Save the original board state
+                    const originalBoard = board.map(row => [...row]);
+                    
+                    for (const move of validMoves) {
+                        // Make the move on a temporary board
+                        makeMove(move.row, move.col, WHITE);
+                        
+                        // Evaluate this move using minimax with alpha-beta pruning
+                        const score = minimax(depth - 1, alpha, beta, false);
+                        
+                        // Restore the board state
+                        board = originalBoard.map(row => [...row]);
+                        
+                        // Update best move if needed
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = move;
+                        }
+                        
+                        // Update alpha
+                        alpha = Math.max(alpha, bestScore);
+                    }
+                    
+                    return bestMove || validMoves[0];
+                }
+
+                // Minimax algorithm with Alpha-Beta Pruning
+                function minimax(depth, alpha, beta, isMaximizingPlayer) {
+                    // Save the current board state
+                    const currentBoardState = board.map(row => [...row]);
+                    
+                    // Terminal conditions: depth = 0 or game over
+                    if (depth === 0) {
+                        const evaluationScore = evaluateBoard();
+                        // Restore board
+                        board = currentBoardState;
+                        return evaluationScore;
+                    }
+                    
+                    const blackMoves = getValidMoves(BLACK);
+                    const whiteMoves = getValidMoves(WHITE);
+                    
+                    // Game over condition
+                    if (blackMoves.length === 0 && whiteMoves.length === 0) {
+                        const scores = countDiscs();
+                        const result = scores.white - scores.black;
+                        // Restore board
+                        board = currentBoardState;
+                        return result;
+                    }
+                    
+                    // Maximizing player (WHITE/AI)
+                    if (isMaximizingPlayer) {
+                        if (whiteMoves.length === 0) {
+                            // If no moves for AI, switch players and continue
+                            // Restore board
+                            board = currentBoardState;
+                            return minimax(depth, alpha, beta, false);
+                        }
+                        
+                        let maxEval = -Infinity;
+                        
+                        for (const move of whiteMoves) {
+                            makeMove(move.row, move.col, WHITE);
+                            const eval = minimax(depth - 1, alpha, beta, false);
+                            // Restore board
+                            board = currentBoardState.map(row => [...row]);
+                            
+                            maxEval = Math.max(maxEval, eval);
+                            alpha = Math.max(alpha, eval);
+                            if (beta <= alpha) {
+                                break; // Beta cutoff
+                            }
+                        }
+                        
+                        return maxEval;
+                    } 
+                    // Minimizing player (BLACK/Human)
+                    else {
+                        if (blackMoves.length === 0) {
+                            // If no moves for human, switch players and continue
+                            // Restore board
+                            board = currentBoardState;
+                            return minimax(depth, alpha, beta, true);
+                        }
+                        
+                        let minEval = Infinity;
+                        
+                        for (const move of blackMoves) {
+                            makeMove(move.row, move.col, BLACK);
+                            const eval = minimax(depth - 1, alpha, beta, true);
+                            // Restore board
+                            board = currentBoardState.map(row => [...row]);
+                            
+                            minEval = Math.min(minEval, eval);
+                            beta = Math.min(beta, eval);
+                            if (beta <= alpha) {
+                                break; // Alpha cutoff
+                            }
+                        }
+                        
+                        return minEval;
+                    }
+                }
+
+                // Comprehensive board evaluation function incorporating key Othello strategies
+                function evaluateBoard() {
+                    // Static weights for different board positions
+                    const positionWeights = [
+                        [100, -20, 10, 5, 5, 10, -20, 100],
+                        [-20, -50, -2, -2, -2, -2, -50, -20],
+                        [10, -2, -1, -1, -1, -1, -2, 10],
+                        [5, -2, -1, -1, -1, -1, -2, 5],
+                        [5, -2, -1, -1, -1, -1, -2, 5],
+                        [10, -2, -1, -1, -1, -1, -2, 10],
+                        [-20, -50, -2, -2, -2, -2, -50, -20],
+                        [100, -20, 10, 5, 5, 10, -20, 100]
+                    ];
+                    
+                    // Calculate position score based on the weights
+                    let positionScore = 0;
+                    for (let row = 0; row < BOARD_SIZE; row++) {
+                        for (let col = 0; col < BOARD_SIZE; col++) {
+                            if (board[row][col] === WHITE) {
+                                positionScore += positionWeights[row][col];
+                            } else if (board[row][col] === BLACK) {
+                                positionScore -= positionWeights[row][col];
+                            }
+                        }
+                    }
+                    
+                    // Calculate mobility (number of valid moves)
+                    const whiteMobility = getValidMoves(WHITE).length;
+                    const blackMobility = getValidMoves(BLACK).length;
+                    const mobilityScore = whiteMobility - blackMobility;
+                    
+                    // Calculate stability (discs that cannot be flipped)
+                    const stabilityScore = calculateStabilityScore();
+                    
+                    // Calculate parity (who will make the last move)
+                    const totalDiscs = countDiscs().black + countDiscs().white;
+                    const emptySquares = 64 - totalDiscs;
+                    let parityScore = 0;
+                    if (emptySquares % 2 === 0) {
+                        parityScore = 10; // Even parity favors the player who just moved (AI)
+                    } else {
+                        parityScore = -10; // Odd parity favors the next player (human)
+                    }
+                    
+                    // Combine all factors with appropriate weights based on game phase
+                    const gameProgress = totalDiscs / 64;
+                    
+                    // Early game: focus on mobility and position
+                    // Mid game: balance all factors
+                    // Late game: focus on disc count and stability
+                    let totalScore;
+                    
+                    if (gameProgress < 0.3) { // Early game
+                        totalScore = 
+                            0.1 * positionScore + 
+                            0.6 * mobilityScore * 10 + 
+                            0.3 * stabilityScore;
+                    } else if (gameProgress < 0.75) { // Mid game
+                        totalScore = 
+                            0.3 * positionScore + 
+                            0.3 * mobilityScore * 10 + 
+                            0.3 * stabilityScore +
+                            0.1 * parityScore;
+                    } else { // Late game
+                        const discDifference = countDiscs().white - countDiscs().black;
+                        totalScore = 
+                            0.1 * positionScore + 
+                            0.1 * mobilityScore * 10 + 
+                            0.4 * stabilityScore +
+                            0.2 * parityScore +
+                            0.2 * discDifference * 10;
+                    }
+                    
+                    return totalScore;
+                }
+
+                // Calculate the stability score (discs that cannot be flipped)
+                function calculateStabilityScore() {
+                let whiteStable = 0;
+                let blackStable = 0;
+                
+                // Check for stable discs (corners and connected stable edges)
+                const stableBoard = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(false));
+                
+                // Corners are always stable
+                const corners = [[0, 0], [0, 7], [7, 0], [7, 7]];
+                
+                // Mark corners as stable if they are occupied
+                for (const [row, col] of corners) {
+                    if (board[row][col] !== EMPTY) {
+                        stableBoard[row][col] = true;
+                        if (board[row][col] === WHITE) {
+                            whiteStable++;
+                        } else {
+                            blackStable++;
+                        }
+                    }
+                }
+                
+                // Function to check if a disc is stable based on its neighbors
+                function checkDiscStability() {
+                    let newStableFound = false;
+                    
+                    for (let row = 0; row < BOARD_SIZE; row++) {
+                        for (let col = 0; col < BOARD_SIZE; col++) {
+                            if (board[row][col] !== EMPTY && !stableBoard[row][col]) {
+                                // Check if this disc is now stable
+                                const stableDirections = {
+                                    horizontal: false,
+                                    vertical: false,
+                                    diagonalA: false, // Top-left to bottom-right
+                                    diagonalB: false  // Top-right to bottom-left
+                                };
+                                
+                                // Check horizontal stability
+                                if ((col === 0 || stableBoard[row][col-1]) && 
+                                    (col === BOARD_SIZE-1 || stableBoard[row][col+1])) {
+                                    stableDirections.horizontal = true;
+                                }
+                                
+                                // Check vertical stability
+                                if ((row === 0 || stableBoard[row-1][col]) && 
+                                    (row === BOARD_SIZE-1 || stableBoard[row+1][col])) {
+                                    stableDirections.vertical = true;
+                                }
+                                
+                                // Check diagonal A stability
+                                if ((row === 0 || col === 0 || stableBoard[row-1][col-1]) && 
+                                    (row === BOARD_SIZE-1 || col === BOARD_SIZE-1 || stableBoard[row+1][col+1])) {
+                                    stableDirections.diagonalA = true;
+                                }
+                                
+                                // Check diagonal B stability
+                                if ((row === 0 || col === BOARD_SIZE-1 || stableBoard[row-1][col+1]) && 
+                                    (row === BOARD_SIZE-1 || col === 0 || stableBoard[row+1][col-1])) {
+                                    stableDirections.diagonalB = true;
+                                }
+                                
+                                // If stable in all directions, mark as stable
+                                if (stableDirections.horizontal && stableDirections.vertical && 
+                                    stableDirections.diagonalA && stableDirections.diagonalB) {
+                                    stableBoard[row][col] = true;
+                                    if (board[row][col] === WHITE) {
+                                        whiteStable++;
+                                    } else {
+                                        blackStable++;
+                                    }
+                                    newStableFound = true;
+                                }
+                            }
+                        }
+                    }
+                    
+                    return newStableFound;
+                }
+                
+                // Iteratively find all stable discs until no new ones are found
+                let iterations = 0;
+                const MAX_ITERATIONS = 10; // Limit iterations for performance
+                
+                while (checkDiscStability() && iterations < MAX_ITERATIONS) {
+                    iterations++;
+                }
+                
+                return whiteStable - blackStable;
+            }
+        
+                validMoves = getValidMoves(WHITE);
+                return makeExpertAIMove(validMoves);
+            },
+            
+            // Custom strategy defined by user
+            custom: function(player) {
+                // Get the custom strategy code
+                const strategyCode = jsCodeElement.value;
+                
+                try {
+                    // Create a function from the code
+                    const customStrategyFn = new Function('board', 'player', 'getValidMoves', 'makeMove', strategyCode);
+                    
+                    // Execute the custom strategy
+                    return customStrategyFn(board, player, getValidMoves, makeMove);
+                } catch (error) {
+                    console.error("Error in custom strategy:", error);
+                    moveLog.push(`Error in custom strategy: ${error.message}`);
+                    gameLogElement.innerHTML = moveLog.join('<br>');
+                    
+                    // Fall back to greedy strategy if there's an error
+                    return strategies.greedy(player);
+                }
+            }
+        };
+        
+        // Modify makeAIMove function to handle custom strategies from localStorage
+        async function makeAIMove() {
+            if (!gameRunning) return;
+            
+            const aiType = currentPlayer === BLACK ? blackAISelect.value : whiteAISelect.value;
+            
+            // Determine which strategy to use
+            let strategy;
+            if (aiType.startsWith('custom_')) {
+                // Get custom strategy name from the ID
+                const strategyName = aiType.replace('custom_', '');
+                const strategyCode = savedStrategies[strategyName];
+                
+                if (strategyCode) {
+                    try {
+                        // Create a function from the code
+                        const customStrategyFn = new Function('board', 'player', 'getValidMoves', 'makeMove', strategyCode);
+                        
+                        // Only log strategy names at the beginning of the game
+                        if (!gameStartLogged) {
+                            const blackName = blackAISelect.options[blackAISelect.selectedIndex].text;
+                            const whiteName = whiteAISelect.options[whiteAISelect.selectedIndex].text;
+                            moveLog.push(`Game started: ${blackName} (Black) vs ${whiteName} (White)`);
+                            gameLogElement.innerHTML = moveLog.join('<br>');
+                            gameLogElement.scrollTop = gameLogElement.scrollHeight;
+                            gameStartLogged = true;
+                        }
+                        
+                        // Execute the custom strategy
+                        strategy = async (player) => {
+                            return await customStrategyFn(board, player, getValidMoves, makeMove);
+                        };
+                    } catch (error) {
+                        console.error(`Error in custom strategy "${strategyName}":`, error);
+                        moveLog.push(`Error in custom strategy "${strategyName}": ${error.message}`);
+                        gameLogElement.innerHTML = moveLog.join('<br>');
+                        gameLogElement.scrollTop = gameLogElement.scrollHeight;
+                        
+                        // Fall back to greedy strategy if there's an error
+                        strategy = builtInStrategies.greedy;
+                    }
+                } else {
+                    // Strategy not found, fall back to greedy
+                    strategy = builtInStrategies.greedy;
+                }
+            } else {
+                // Use built-in strategy
+                // Only log strategy names at the beginning of the game
+            if (!gameStartLogged) {
+                const blackName = blackAISelect.options[blackAISelect.selectedIndex].text;
+                const whiteName = whiteAISelect.options[whiteAISelect.selectedIndex].text;
+                moveLog.push(`Game started: ${blackName} (Black) vs ${whiteName} (White)`);
+                gameLogElement.innerHTML = moveLog.join('<br>');
+                gameLogElement.scrollTop = gameLogElement.scrollHeight;
+                gameStartLogged = true;
+            }
+                strategy = builtInStrategies[aiType];
+            }
+            
+            if (!strategy) {
+                console.error("Strategy not found:", aiType);
+                return;
+            }
+            
+            try {
+                // Get move
+                const move = await strategy(currentPlayer);
+                
+                if (!move) {
+                    // No valid moves, check if game is over
+                    const opponent = currentPlayer === BLACK ? WHITE : BLACK;
+                    const opponentMoves = getValidMoves(opponent);
+                    
+                    if (opponentMoves.length === 0) {
+                        // Game over
+                        endGame();
+                        return;
+                    }
+                    
+                    // Pass turn to opponent
+                    const playerName = currentPlayer === BLACK ? "Black" : "White";
+                    moveLog.push(`${playerName} passes (no valid moves)`);
+                    gameLogElement.innerHTML = moveLog.join('<br>');
+                    gameLogElement.scrollTop = gameLogElement.scrollHeight;
+                    
+                    currentPlayer = opponent;
+                    updateStatus();
+                    
+                    // Schedule next AI move
+                    setTimeout(makeAIMove, 250);
+                    return;
+                }
+                
+                // Make the move
+                makeMove(move.row, move.col, currentPlayer);
+                
+                // Switch players
+                currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
+                updateStatus();
+                
+                // Schedule next AI move
+                setTimeout(makeAIMove, 250);
+            } catch (error) {
+                console.error("Error in AI move:", error);
+                moveLog.push(`Error in AI move: ${error.message}`);
+                gameLogElement.innerHTML = moveLog.join('<br>');
+                endGame();
+            }
+        }
+        
+        // [KEEP OTHER GAME FUNCTIONS]
+        // updateStatus, endGame, startGame, resetGame
+        // Update game status
+        function updateStatus() {
+            const scores = countDiscs();
+            const playerText = currentPlayer === BLACK ? "Black" : "White";
+            
+            if (gameRunning) {
+                statusElement.textContent = `${playerText}'s turn (${scores.black}-${scores.white})`;
+                statusElement.style.backgroundColor = currentPlayer === BLACK ? '#333' : '#999';
+            } else {
+                // Game over
+                if (scores.black > scores.white) {
+                    statusElement.textContent = `Game over. Black wins! (${scores.black}-${scores.white})`;
+                    statusElement.style.backgroundColor = '#333';
+                } else if (scores.white > scores.black) {
+                    statusElement.textContent = `Game over. White wins! (${scores.black}-${scores.white})`;
+                    statusElement.style.backgroundColor = '#999';
+                } else {
+                    statusElement.textContent = `Game over. It's a tie! (${scores.black}-${scores.white})`;
+                    statusElement.style.backgroundColor = '#666';
+                }
+            }
+        }
+        
+        // End the game
+        function endGame() {
+            gameRunning = false;
+            startButton.disabled = false;
+            updateStatus();
+            // Get final scores
+            const scores = countDiscs();
+
+            // Add final score to the game log
+            moveLog.push(`Game over: Final score ${scores.black}-${scores.white}`);
+            if (scores.black > scores.white) {
+                moveLog.push(`Black wins by ${scores.black - scores.white} pieces!`);
+            } else if (scores.white > scores.black) {
+                moveLog.push(`White wins by ${scores.white - scores.black} pieces!`);
+            } else {
+                moveLog.push(`It's a tie!`);
+            }
+            
+            moveLog.push("Game over");
+            gameLogElement.innerHTML = moveLog.join('<br>');
+            gameLogElement.scrollTop = gameLogElement.scrollHeight;
+            updateStatus();
+        }
+        
+        // Start a new game
+        async function startGame() {
+            // Always reinitialize the board before starting a new game
+            initializeBoard();
+            
+            gameRunning = true;
+            currentPlayer = BLACK;
+            moveLog = [];
+            gameStartLogged = false; // Reset this flag
+            gameLogElement.innerHTML = moveLog.join('<br>');
+            
+            startButton.disabled = true;
+            updateStatus();
+            
+            // Start AI moves
+            setTimeout(makeAIMove, 125);
+        }
+        
+        // Reset the game
+        function resetGame() {
+            gameRunning = false;
+            currentPlayer = BLACK;
+            moveLog = ["Game reset"];
+            gameStartLogged = false; // Reset this flag
+            gameLogElement.innerHTML = moveLog.join('<br>');
+            
+            initializeBoard();
+            startButton.disabled = false;
+            statusElement.textContent = "Ready to start";
+            statusElement.style.backgroundColor = '#4CAF50';
+        }
+
+
+        // Add these new functions for strategy management
+        
+        // Save a strategy
+        function saveStrategy() {
+            const strategyName = strategyNameInput.value.trim();
+            const strategyCode = jsCodeElement.value;
+            
+            if (!strategyName) {
+                alert("Please enter a strategy name");
+                return;
+            }
+            
+            // Save to our strategy collection
+            savedStrategies[strategyName] = strategyCode;
+            
+            // Save to local storage for persistence
+            localStorage.setItem('othelloStrategies', JSON.stringify(savedStrategies));
+            
+            // Update the UI
+            updateStrategyList();
+            updateAISelectors();
+            
+            statusElement.textContent = `Strategy "${strategyName}" saved`;
+            statusElement.style.backgroundColor = '#4CAF50';
+        }
+        
+        // Clear the editor
+        function clearEditor() {
+            jsCodeElement.value = '';
+            strategyNameInput.value = 'My Strategy';
+        }
+        
+        // Load a strategy into the editor
+        function loadStrategy(name) {
+            const code = savedStrategies[name];
+            if (code) {
+                jsCodeElement.value = code;
+                strategyNameInput.value = name;
+            }
+        }
+        
+        // Delete a strategy
+        function deleteStrategy(name) {
+            if (confirm(`Are you sure you want to delete the strategy "${name}"?`)) {
+                delete savedStrategies[name];
+                localStorage.setItem('othelloStrategies', JSON.stringify(savedStrategies));
+                updateStrategyList();
+                updateAISelectors();
+                
+                statusElement.textContent = `Strategy "${name}" deleted`;
+                statusElement.style.backgroundColor = '#f44336';
+            }
+        }
+        
+        // Update the saved strategies list
+        function updateStrategyList() {
+            strategyListElement.innerHTML = '';
+            
+            const strategyNames = Object.keys(savedStrategies);
+            
+            if (strategyNames.length === 0) {
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'strategy-item';
+                emptyItem.innerHTML = '<span>No saved strategies yet</span>';
+                strategyListElement.appendChild(emptyItem);
+                return;
+            }
+            
+            strategyNames.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'strategy-item';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = name;
+                item.appendChild(nameSpan);
+                
+                const buttons = document.createElement('div');
+                buttons.className = 'buttons';
+                
+                const loadButton = document.createElement('button');
+                loadButton.textContent = 'Edit';
+                loadButton.addEventListener('click', () => loadStrategy(name));
+                buttons.appendChild(loadButton);
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.className = 'delete-btn';
+                deleteButton.addEventListener('click', () => deleteStrategy(name));
+                buttons.appendChild(deleteButton);
+                
+                item.appendChild(buttons);
+                strategyListElement.appendChild(item);
+            });
+        }
+        
+        // Update AI selectors with custom strategies
+        function updateAISelectors() {
+            // Clear existing custom options
+            Array.from(blackAISelect.options).forEach(option => {
+                if (option.value.startsWith('custom_')) {
+                    blackAISelect.removeChild(option);
+                }
+            });
+            
+            Array.from(whiteAISelect.options).forEach(option => {
+                if (option.value.startsWith('custom_')) {
+                    whiteAISelect.removeChild(option);
+                }
+            });
+            
+            // Add options for each saved strategy
+            Object.keys(savedStrategies).forEach(name => {
+                const strategyId = `custom_${name}`;
+                
+                const blackOption = document.createElement('option');
+                blackOption.value = strategyId;
+                blackOption.textContent = name;
+                blackAISelect.appendChild(blackOption);
+                
+                const whiteOption = document.createElement('option');
+                whiteOption.value = strategyId;
+                whiteOption.textContent = name;
+                whiteAISelect.appendChild(whiteOption);
+            });
+        }
+        
+        // Load saved strategies from localStorage on page load
+        function loadSavedStrategies() {
+            const savedData = localStorage.getItem('othelloStrategies');
+            if (savedData) {
+                try {
+                    savedStrategies = JSON.parse(savedData);
+                    updateStrategyList();
+                    updateAISelectors();
+                } catch (error) {
+                    console.error("Error loading saved strategies:", error);
+                }
+            }
+        }
+        
+        // Function to handle file uploads
+        function uploadStrategyFiles() {
+            const files = strategyFileInput.files;
+            
+            if (files.length === 0) {
+                alert('Please select at least one file to upload.');
+                return;
+            }
+            
+            // Create a status container
+            let statusContainer = document.querySelector('.upload-status');
+            if (!statusContainer) {
+                statusContainer = document.createElement('div');
+                statusContainer.className = 'upload-status';
+                document.querySelector('.strategy-upload').appendChild(statusContainer);
+            }
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            // Process each file
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const fileName = file.name;
+                        const strategyCode = e.target.result;
+                        
+                        // Extract strategy name from filename (remove .js extension)
+                        let strategyName = fileName.replace(/\.js$/, '');
+                        
+                        // Save the strategy
+                        savedStrategies[strategyName] = strategyCode;
+                        localStorage.setItem('othelloStrategies', JSON.stringify(savedStrategies));
+                        successCount++;
+                        
+                        // Update UI after all files are processed
+                        if (successCount + errorCount === files.length) {
+                            updateStrategyList();
+                            updateAISelectors();
+                            showUploadStatus(successCount, errorCount);
+                        }
+                    } catch (error) {
+                        console.error(`Error processing file ${file.name}:`, error);
+                        errorCount++;
+                        
+                        // Update UI after all files are processed
+                        if (successCount + errorCount === files.length) {
+                            updateStrategyList();
+                            updateAISelectors();
+                            showUploadStatus(successCount, errorCount);
+                        }
+                    }
+                };
+                
+                reader.onerror = function() {
+                    console.error(`Error reading file ${file.name}`);
+                    errorCount++;
+                    
+                    // Update UI after all files are processed
+                    if (successCount + errorCount === files.length) {
+                        updateStrategyList();
+                        updateAISelectors();
+                        showUploadStatus(successCount, errorCount);
+                    }
+                };
+                
+                // Read the file as text
+                reader.readAsText(file);
+            });
+        }
+
+        // Function to show upload status
+        function showUploadStatus(successCount, errorCount) {
+            const statusContainer = document.querySelector('.upload-status');
+            
+            if (errorCount === 0) {
+                statusContainer.className = 'upload-status upload-success';
+                statusContainer.textContent = `Successfully uploaded ${successCount} strategy file${successCount !== 1 ? 's' : ''}.`;
+            } else if (successCount === 0) {
+                statusContainer.className = 'upload-status upload-error';
+                statusContainer.textContent = `Failed to upload ${errorCount} file${errorCount !== 1 ? 's' : ''}.`;
+            } else {
+                statusContainer.className = 'upload-status';
+                statusContainer.textContent = `Uploaded ${successCount} file${successCount !== 1 ? 's' : ''} successfully. Failed to upload ${errorCount} file${errorCount !== 1 ? 's' : ''}.`;
+            }
+            
+            // Clear the file input
+            strategyFileInput.value = '';
+            
+            // Update the status message in the main game area
+            statusElement.textContent = `Uploaded ${successCount} strategy file${successCount !== 1 ? 's' : ''}.`;
+            statusElement.style.backgroundColor = errorCount === 0 ? '#4CAF50' : '#FF9800';
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeBoard();
+            
+            // Add event listeners
+            startButton.addEventListener('click', startGame);
+            resetButton.addEventListener('click', resetGame);
+            saveStrategyButton.addEventListener('click', saveStrategy);
+            clearEditorButton.addEventListener('click', clearEditor);
+            uploadStrategiesButton.addEventListener('click', uploadStrategyFiles);
+    
+            // Load saved strategies
+            loadSavedStrategies();
+        });
+    </script>
+
+
+</body></html>
