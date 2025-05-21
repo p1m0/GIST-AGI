@@ -79,18 +79,16 @@ function mcts(boardLocal, validMoves, player, opponent, timeLimit, numMovesToRet
     if (verbose)
         console.log(`Simple MCTS running...`);
     let moveScores = [];
-    const timePerMove = timeLimit / validMoves.length;
     
     let bestWinRate = -1;
     let totalGamesCount = 0;
     
     for (const move of validMoves)
     {
-        const startTime = Date.now();
         newBoard = api.simulateMove(boardLocal, player, move.row, move.col).resultingBoard;
         let wins = 0;
         let losses = 0;
-        while (Date.now() - startTime < timePerMove * 1000)
+        for (let i = 0; i < 2; i++)
         {
             randomPlayout(newBoard, player, opponent, positionWeights, api) == 1 ? wins++ : losses++
             totalGamesCount++;
@@ -121,6 +119,7 @@ function mcts(boardLocal, validMoves, player, opponent, timeLimit, numMovesToRet
 
 function studentStrategy(board, player, validMoves, makeMove)
 {
+    const startTime = Date.now();
     api = window.IntelligentSystemInterface;
     const positionWeights = [
         [100, 10, 80, 40, 40, 80, 10, 100],
@@ -133,26 +132,10 @@ function studentStrategy(board, player, validMoves, makeMove)
         [100, 10, 80, 40, 40, 80, 10, 100],
     ];
 
-    const verbose = false;
-    let max_time = 2 * 10 / ((board.length * board.length - 4));
-    max_time *= 0.5;
-    max_time *= 0.9;
-    console.log(`Max time: ${max_time}`);
-    const timeLimitTotal = max_time;
-    const timeLimit1 = 0.4 * timeLimitTotal;
-    const timeLimit2 = 0.6 * timeLimitTotal;
+    const verbose = true;
 
     const opponent = player == BLACK ? WHITE : BLACK;
-
-    if (validMoves.length == 0)
-    {
-        if (verbose)
-            console.log(`[MCTS] No valid moves available\n`);
-        return null;
-    }
-    else if (validMoves.length <= 5)
-        return mcts(board, validMoves, player, opponent, timeLimit2 + timeLimit1, 1, positionWeights, api, verbose)[0];
-
-    top3Moves = mcts(board, validMoves, player, opponent, timeLimit1, 3, positionWeights, api, false);
-    return mcts(board, top3Moves, player, opponent, timeLimit2, 1, positionWeights, api, verbose)[0];
+    const move = mcts(board, validMoves, player, opponent, 0, 1, positionWeights, api, verbose)[0];
+    console.log('MCTS run for ' + (Date.now() - startTime) + 'ms');
+    return move;
 }

@@ -30,7 +30,7 @@ function generateInitialWeightTable(boardSize)
     {
         for (let j = 0; j < boardSize / 2; j++)
         {
-            const weight = 10 + Math.random() * 90; // Random value between 10 and 100
+            const weight = 5 + Math.random() * 90; // Random value between 10 and 100
             
             // Mirror to all four quadrants
             // weights[i][j] = weight;
@@ -96,6 +96,36 @@ function positionalStrategy(validMoves, positionWeights)
     return bestMove;
 }
 
+function quickMCTSStrategy(boardLocal, validMoves, positionWeights, player, api)
+{
+    opponent = player == BLACK ? WHITE : BLACK;
+    let moveScores = [];
+    let bestWinRate = -1;
+    
+    for (const move of validMoves)
+    {
+        newBoard = api.simulateMove(boardLocal, player, move.row, move.col).resultingBoard;
+        let wins = 0;
+        let losses = 0;
+        for (let i = 0; i < 2; i++)
+            randomPlayout(newBoard, player, opponent, positionWeights, api) == 1 ? wins++ : losses++
+
+        winRate = wins / (wins + losses);
+        moveScores.push({
+            move,
+            winRate
+        });
+        
+        if (winRate > bestWinRate)
+            bestWinRate = winRate
+    }
+
+    if (moveScores.length == 0)
+        return null;
+    moveScores.sort((a, b) => b.winRate - a.winRate);
+    return moveScores[0].move;
+}
+
 function playGame(positionWeights1, positionWeights2, initialBoard, strategyFn, api, evalMoveCount=false)
 {
     let boardLocal = initialBoard.map(row => [...row]);
@@ -120,7 +150,10 @@ function playGame(positionWeights1, positionWeights2, initialBoard, strategyFn, 
                     break;
             }
 
-            const move = strategyFn(validMoves, playerOnTurn == player1 ? positionWeights1 : positionWeights2);
+            // const move = strategyFn(validMoves, playerOnTurn == player1 ? positionWeights1 : positionWeights2);
+            // mcts(board, top3Moves, player, opponent, timeLimit2, 1, positionWeights, api, verbose)[0]
+            const move = quickMCTSStrategy(boardLocal, validMoves,
+                playerOnTurn == player1 ? positionWeights1 : positionWeights2, playerOnTurn, api);
             boardLocal = api.simulateMove(boardLocal, playerOnTurn, move.row, move.col).resultingBoard;
 
             let temp = playerOnTurn;
@@ -149,7 +182,9 @@ function playGame(positionWeights1, positionWeights2, initialBoard, strategyFn, 
                     break;
             }
 
-            const move = strategyFn(validMoves, playerOnTurn == player1 ? positionWeights1 : positionWeights2);
+            // const move = strategyFn(validMoves, playerOnTurn == player1 ? positionWeights1 : positionWeights2);
+            const move = quickMCTSStrategy(boardLocal, validMoves,
+                playerOnTurn == player1 ? positionWeights1 : positionWeights2, playerOnTurn, api);
             boardLocal = api.simulateMove(boardLocal, playerOnTurn, move.row, move.col).resultingBoard;
 
             moveCount++;
@@ -170,44 +205,6 @@ function playGame(positionWeights1, positionWeights2, initialBoard, strategyFn, 
     }
 }
 
-function evaluatePopulationRandom(population, initialBoard, randomEvalSize, api)
-{
-    for (let i = 0; i < population.length; i++)
-        population[i].fitness = 0;
-
-    const populationSize = population.length;
-    const numGamesPerIndividual = Math.floor(populationSize * randomEvalSize);
-    for (let i = 0; i < populationSize; i++)
-    {
-        for (let k = 0; k < numGamesPerIndividual; k++)
-        {
-            j = Math.floor(Math.random() * populationSize);
-            while (i == j)
-                j = Math.floor(Math.random() * populationSize);
-            // Individual i plays as BLACK
-            // Use positioin weight greedy strategy for both players
-            let result = playGame(population[i].individual, population[j].individual,
-                initialBoard, positionalStrategy, api);
-            result == 1 ? population[i].fitness++ : population[j].fitness++;
-            // Use weighted random strategy for both players
-            result = playGame(population[i].individual, population[j].individual,
-                initialBoard, randomStrategy, api);
-            result == 1 ? population[i].fitness++ : population[j].fitness++;
-                    
-            // Individual i plays as WHITE
-            // Use positioin weight greedy strategy for both players
-            result = playGame(population[j].individual, population[i].individual,
-                initialBoard, positionalStrategy, api);
-            result == 1 ? population[j].fitness++ : population[i].fitness++;
-            // Use weighted random strategy for both players
-            result = playGame(population[j].individual, population[i].individual,
-                initialBoard, randomStrategy, api);
-            result == 1 ? population[j].fitness++ : population[i].fitness++;
-        }
-    }
-    return population
-}
-
 function evaluatePopulation(population, initialBoard, api)
 {
     for (let i = 0; i < population.length; i++)
@@ -220,7 +217,7 @@ function evaluatePopulation(population, initialBoard, api)
     {
         for (let j = i + 1; j < population.length; j++)
         {
-            n_games += 4;
+            n_games += 2;
             // Individual i plays as BLACK
             // Use positioin weight greedy strategy for both players
             let gameResult = playGame(population[i].individual, population[j].individual,
@@ -231,12 +228,12 @@ function evaluatePopulation(population, initialBoard, api)
             whiteMovePercentTotal += gameResult.whiteMovePercent;
             
             // Use weighted random strategy for both players
-            gameResult = playGame(population[i].individual, population[j].individual,
-                initialBoard, randomStrategy, api, true);        
+            // gameResult = playGame(population[i].individual, population[j].individual,
+            //     initialBoard, randomStrategy, api, true);        
             
-            gameResult.result == 1 ? population[i].fitness++ : population[j].fitness++;
-            blackMovePercentTotal += gameResult.blackMovePercent;
-            whiteMovePercentTotal += gameResult.whiteMovePercent;
+            // gameResult.result == 1 ? population[i].fitness++ : population[j].fitness++;
+            // blackMovePercentTotal += gameResult.blackMovePercent;
+            // whiteMovePercentTotal += gameResult.whiteMovePercent;
                     
             // Individual i plays as WHITE
             // Use positioin weight greedy strategy for both players
@@ -248,12 +245,12 @@ function evaluatePopulation(population, initialBoard, api)
             whiteMovePercentTotal += gameResult.whiteMovePercent;
             
             // Use weighted random strategy for both players
-            gameResult = playGame(population[j].individual, population[i].individual,
-                initialBoard, randomStrategy, api, true);
+            // gameResult = playGame(population[j].individual, population[i].individual,
+            //     initialBoard, randomStrategy, api, true);
             
-            gameResult.result == 1 ? population[j].fitness++ : population[i].fitness++;
-            blackMovePercentTotal += gameResult.blackMovePercent;
-            whiteMovePercentTotal += gameResult.whiteMovePercent;
+            // gameResult.result == 1 ? population[j].fitness++ : population[i].fitness++;
+            // blackMovePercentTotal += gameResult.blackMovePercent;
+            // whiteMovePercentTotal += gameResult.whiteMovePercent;
         }
     }
     blackMovePercentTotal /= n_games;
@@ -317,7 +314,7 @@ function mutate(positionWeights, mutationRate)
         {
             if (Math.random() < mutationRate)
             {
-                let mutation = 10 + Math.random() * 90; // Random value between 0 and 100
+                let mutation = 5 + Math.random() * 90; // Random value between 0 and 100
 
                 positionWeights[i][j] = mutation;
                 positionWeights[j][boardSize - 1 - i] = mutation;
@@ -353,8 +350,7 @@ function evolveWeightTables(boardSize, initialBoard, populationSize, mutationRat
         let generationTime = Date.now();
         gen++;
         let populationEvalTime = Date.now();
-        // population = evaluatePopulationRandom(population, initialBoard, randomEvalSize, api);
-        population = evaluatePopulation(population, initialBoard, api);
+        population = evaluatePopulation(population, initialBoard, api).population;
         populationEvalTime = Date.now() - populationEvalTime;
         meanPopulationEvalTime += (1 / gen) * (populationEvalTime - meanPopulationEvalTime);
         
@@ -362,7 +358,7 @@ function evolveWeightTables(boardSize, initialBoard, populationSize, mutationRat
         
         while (nextGen.length < populationSize)
         {
-            const [parent1, parent2] = selectParents(nextGen);
+            const [parent1, parent2] = selectParents(population);
             let child = crossover(parent1, parent2, boardSize);
             // We don't want to mutate for the last 15% of the time limit
             if (Date.now() - startTime < (timeLimit * 0.85) * 1000)
@@ -374,12 +370,6 @@ function evolveWeightTables(boardSize, initialBoard, populationSize, mutationRat
 
         generationTime = Date.now() - generationTime;
         meanGenerationTime += (1 / gen) * (generationTime - meanGenerationTime);
-
-        // console.log(`Generation ${gen}:`)
-        // console.log(` evaluation: ${populationEvalTime / 1000} s`)
-        // console.log(` mean eval : ${(meanPopulationEvalTime / 1000).toFixed(3)} seconds`);
-        // console.log(` total     : ${generationTime / 1000} s`)
-        // console.log(` mean total: ${(meanGenerationTime / 1000).toFixed(3)} seconds`);
     }
     console.log(`Evolution finished after ${gen} generations, time elapsed: ${(Date.now() - startTime) / 1000} seconds`);
     
@@ -389,7 +379,6 @@ function evolveWeightTables(boardSize, initialBoard, populationSize, mutationRat
     
     timeBeforeEval = Date.now();
     let bestWeightTable = getBestWeightTable(evalResult.population)
-    console.log("Sorting took: " + (Date.now() - timeBeforeEval) / 1000 + " seconds");
 
     return { blackMovePercent: evalResult.blackMovePercentTotal,
             whiteMovePercent: evalResult.whiteMovePercentTotal,
@@ -479,7 +468,7 @@ function analyzeStage(stageConfig, initialBoard, validMoves, api)
     const mutationRate = 0.01;
     const eliteSize = 0.3;
     const randomEvalSize = 0.125;
-    const timeLimit = 20;
+    const timeLimit = 30;
 
     let { blackMovePercent, whiteMovePercent, positionWeights } = evolveWeightTables(stageConfig.boardSize, initialBoard, populationSize,
         mutationRate, eliteSize, randomEvalSize, timeLimit, api);
@@ -498,13 +487,11 @@ function analyzeStage(stageConfig, initialBoard, validMoves, api)
     console.log("Best position weights:");
     console.log(positionWeights);
 
-    console.log("Black move percent: " + blackMovePercent);
-    console.log("White move percent: " + whiteMovePercent);
-
     const pessimisticMovesExpectation = Math.max(blackMovePercent, whiteMovePercent) * (stageConfig.boardSize * stageConfig.boardSize - 4 - stageConfig.initialBlocked.length);
     const moveTimeLeeway = 0.85
     maxTime = 10 / pessimisticMovesExpectation;
     maxTime *= moveTimeLeeway;
+    maxTime *= 0.5;
     console.log("Max time per move: " + maxTime + " seconds");
 
     let finalTime = Date.now();

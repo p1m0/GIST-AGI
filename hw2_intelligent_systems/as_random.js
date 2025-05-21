@@ -361,7 +361,7 @@ function evolveWeightTables(boardSize, initialBoard, populationSize, mutationRat
         
         while (nextGen.length < populationSize)
         {
-            const [parent1, parent2] = selectParents(population);
+            const [parent1, parent2] = selectParents(nextGen);
             let child = crossover(parent1, parent2, boardSize);
             // We don't want to mutate for the last 15% of the time limit
             if (Date.now() - startTime < (timeLimit * 0.85) * 1000)

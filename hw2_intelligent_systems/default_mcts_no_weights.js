@@ -122,22 +122,24 @@ function mcts(boardLocal, validMoves, player, opponent, timeLimit, numMovesToRet
 function studentStrategy(board, player, validMoves, makeMove)
 {
     api = window.IntelligentSystemInterface;
-    const positionWeights = [
-        [100, 10, 80, 40, 40, 80, 10, 100],
-        [10,   8, 20, 20, 20, 20,  8,  10],
-        [80,  20, 40, 40, 40, 40, 20,  80],
-        [40,  20, 40, 40, 40, 40, 20,  40],
-        [40,  20, 40, 40, 40, 40, 20,  40],
-        [80,  20, 40, 40, 40, 40, 20,  80],
-        [10,   8, 20, 20, 20, 20,  8,  10],
-        [100, 10, 80, 40, 40, 80, 10, 100],
-    ];
+    console.log('Api properties:', Object.getOwnPropertyNames(api));
+    console.log('Api full inspection:', JSON.stringify(api, null, 2));
+    // const positionWeights = [
+    //     [100, 10, 80, 40, 40, 80, 10, 100],
+    //     [10,   8, 20, 20, 20, 20,  8,  10],
+    //     [80,  20, 40, 40, 40, 40, 20,  80],
+    //     [40,  20, 40, 40, 40, 40, 20,  40],
+    //     [40,  20, 40, 40, 40, 40, 20,  40],
+    //     [80,  20, 40, 40, 40, 40, 20,  80],
+    //     [10,   8, 20, 20, 20, 20,  8,  10],
+    //     [100, 10, 80, 40, 40, 80, 10, 100],
+    // ];
+    const positionWeights = null;
 
     const verbose = false;
     let max_time = 2 * 10 / ((board.length * board.length - 4));
     max_time *= 0.5;
     max_time *= 0.9;
-    console.log(`Max time: ${max_time}`);
     const timeLimitTotal = max_time;
     const timeLimit1 = 0.4 * timeLimitTotal;
     const timeLimit2 = 0.6 * timeLimitTotal;

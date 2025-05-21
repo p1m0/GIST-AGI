@@ -353,8 +353,7 @@ function evolveWeightTables(boardSize, initialBoard, populationSize, mutationRat
         let generationTime = Date.now();
         gen++;
         let populationEvalTime = Date.now();
-        // population = evaluatePopulationRandom(population, initialBoard, randomEvalSize, api);
-        population = evaluatePopulation(population, initialBoard, api);
+        population = evaluatePopulationRandom(population, initialBoard, randomEvalSize, api);
         populationEvalTime = Date.now() - populationEvalTime;
         meanPopulationEvalTime += (1 / gen) * (populationEvalTime - meanPopulationEvalTime);
         
@@ -362,7 +361,7 @@ function evolveWeightTables(boardSize, initialBoard, populationSize, mutationRat
         
         while (nextGen.length < populationSize)
         {
-            const [parent1, parent2] = selectParents(nextGen);
+            const [parent1, parent2] = selectParents(population);
             let child = crossover(parent1, parent2, boardSize);
             // We don't want to mutate for the last 15% of the time limit
             if (Date.now() - startTime < (timeLimit * 0.85) * 1000)
@@ -475,11 +474,11 @@ function mcts(boardLocal, validMoves, player, opponent, timeLimit, numMovesToRet
 function analyzeStage(stageConfig, initialBoard, validMoves, api)
 {
     const startTime = Date.now();
-    const populationSize = 4;
+    const populationSize = 60;
     const mutationRate = 0.01;
     const eliteSize = 0.3;
-    const randomEvalSize = 0.125;
-    const timeLimit = 20;
+    const randomEvalSize = 0.2;
+    const timeLimit = 30;
 
     let { blackMovePercent, whiteMovePercent, positionWeights } = evolveWeightTables(stageConfig.boardSize, initialBoard, populationSize,
         mutationRate, eliteSize, randomEvalSize, timeLimit, api);
@@ -498,13 +497,14 @@ function analyzeStage(stageConfig, initialBoard, validMoves, api)
     console.log("Best position weights:");
     console.log(positionWeights);
 
-    console.log("Black move percent: " + blackMovePercent);
-    console.log("White move percent: " + whiteMovePercent);
+    // console.log("Black move percent: " + blackMovePercent);
+    // console.log("White move percent: " + whiteMovePercent);
 
     const pessimisticMovesExpectation = Math.max(blackMovePercent, whiteMovePercent) * (stageConfig.boardSize * stageConfig.boardSize - 4 - stageConfig.initialBlocked.length);
     const moveTimeLeeway = 0.85
     maxTime = 10 / pessimisticMovesExpectation;
     maxTime *= moveTimeLeeway;
+    maxTime *= 0.5; // For testing purposes
     console.log("Max time per move: " + maxTime + " seconds");
 
     let finalTime = Date.now();

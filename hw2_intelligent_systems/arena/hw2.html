@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Othello AI Arena (HW2 - GIST AGI25sp)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Othello AI Arena for Intelligent System <a href="../hw2" id="api-link">(HW2)</a></h1>
+
+    <div class="container">
+        <div class="game-container">
+            <div class="info-panel">
+                <div class="score-box black">Black: <span id="black-score">0</span></div>
+                <div class="score-box white">White: <span id="white-score">0</span></div>
+            </div>
+            <div class="timer-panel">
+                <div class="timer black">Black: <span id="black-timer">0.00s</span> / 10.00s</div>
+                <div class="timer white">White: <span id="white-timer">0.00s</span> / 10.00s</div>
+            </div>
+            <div class="status" id="status">Ready to start</div>
+            <div class="board" id="board"></div>
+
+            <div class="controls">
+                <div>
+                    <label for="stageSelect">Stage:</label>
+                    <select id="stageSelect"></select>
+                </div>
+                <div>
+                    <label for="black-ai">Black:</label> <select id="black-ai"></select>
+                </div>
+                <div>
+                    <label for="white-ai">White:</label> <select id="white-ai"></select>
+                </div>
+                <div>
+                    <button id="start-btn">Start Game</button>
+                    <button id="reset-btn">Reset Board</button>
+                    <button id="clear-all-btn" class="delete-btn">Clear All Data</button>
+                </div>
+            </div>
+
+            <div class="game-log" id="game-log">Game log...</div>
+            <button id="save-log">Save Log</button>
+            <div class="log-controls">
+                <textarea id="log-input" placeholder="Game log data"></textarea>
+            </div>
+
+            <!-- <div class="rollout-controls"> -->
+                <!-- <h4>Game Replay</h4>
+                <div class="rollout-display">
+                    <span id="rollout-progress">Turn 0/0</span>
+                    <span id="game-counter">(Game 1/1)</span>
+                </div>
+                <div class="rollout-buttons">
+                    <button id="rollout-prev-game">◀◀</button>
+                    <button id="rollout-prev">◀</button>
+                    <button id="rollout-play">▶</button>
+                    <button id="rollout-pause">⏸</button>
+                    <button id="rollout-stop">⏹</button>
+                    <button id="rollout-next">▶</button>
+                    <button id="rollout-next-game">▶▶</button>
+                </div>
+                <div class="rollout-sliders">
+                    <label>
+                        Move:
+                        <input type="range" id="rollout-moves" min="0" max="0" value="0">
+                    </label>
+                    <label>
+                        Speed:
+                        <input type="range" id="rollout-speed" min="1" max="5" value="3">
+                    </label>
+                </div> -->
+            <!-- </div> -->
+        </div>
+    
+    <div class="game-container">
+        <div class="leaderboard-container">
+            <h3>Leaderboard</h3>
+            <div>
+                <button id="run-tournament-btn" class="tournament-btn">Begin ▶️</button>
+                <button id="stop-tournament-btn" class="tournament-btn" style="background-color: #f44336;">Stop 🛑</button>
+                <button id="reset-tournament-btn" class="tournament-btn">Refresh 🔁</button>
+            </div>
+            <div id="tournament-status">Competition results will appear here.</div>
+            <table id="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Strategy</th>
+                        <th>Win Rate</th>
+                        <th>W</th>
+                        <th>L</th>
+                        <th>D</th>
+                        <th>G</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+        </div><br>
+
+        <div class="code-container">
+            <div class="intelligent-system-upload">
+                <h4>Upload Intelligent System (with Interaction) - <a href="./Intelligent-system-API-reference" id="api-link">How to use API</a> </h4>
+                <p>Your system will have maximum 60 seconds to analyze the stage and generate a tailored strategy. </p>
+                <input type="file" id="intelligent-system-file-input" accept=".js">
+                <button id="upload-intelligent-system">Upload Intelligent System</button>
+                <div class="intelligent-system-progress" id="intelligent-system-progress">
+                    <div class="intelligent-system-progress-bar" id="intelligent-system-progress-bar"></div>
+                </div>
+                <div class="intelligent-system-status" id="intelligent-system-status"></div>
+            </div><br>
+            
+            <div class="strategy-upload">
+                <h4>
+                    Upload Strategy (without Interaction) -
+                    <a href="./examples/sampleStrategy.js" id="api-link" download>Sample Strategy</a>
+                </h4>
+                <input type="file" id="strategy-file-input" accept=".js" multiple>
+                <button id="upload-strategies">Upload Strategies</button>
+                <div class="upload-status" id="upload-status-msg" style="display:none;"></div> 
+            </div><br>
+            
+            
+            <div class="saved-strategies" id="strategy-list">
+                <h4>Saved Strategies</h4><div class="strategy-item"><span>No saved strategies</span></div>
+            </div> <br>
+        </div> <br>
+
+        <div class="code-container hidden">
+            <h3>Sample Strategy</h3>
+            <div><label for="strategy-name">Strategy Name:</label><input type="text" id="strategy-name"
+                    value="sampleStrategy" /></div>
+            <textarea class="code-editor" id="js-code">function studentStrategy(board, player, validMoves, makeMove) {
+    if (validMoves.length === 0) return null;
+
+    const positionWeights = [[120,-20,20,5,5,20,-20,120],[-20,-40,-5,-5,-5,-5,-40,-20],[20,-5,15,3,3,15,-5,20],[5,-5,3,3,3,3,-5,5],[5,-5,3,3,3,3,-5,5],[20,-5,15,3,3,15,-5,20],[-20,-40,-5,-5,-5,-5,-40,-20],[120,-20,20,5,5,20,-20,120]];
+
+    let bestMove = null;
+    let bestScore = -Infinity;
+
+    for (const move of validMoves) {
+        const score = positionWeights[move.row][move.col];
+        if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
+        }
+    }
+                
+    return bestMove;
+}</textarea>
+            <div class="strategy-buttons"><button id="save-strategy">Save Strategy</button><button id="clear-editor">Clear
+                    Editor</button></div>
+        </div>
+    </div>
+
+
+        
+    </div>
+
+    <!-- JavaScript files included here -->
+    <!-- 1. 의존성 순서를 올바르게 조정 -->
+    <script src="constant.js"></script>
+    <script src="stages.js"></script>
+    <script src="strategies.js"></script>
+    <script src="game-core.js"></script>
+    <script src="game-logger.js"></script>
+    <script src="game-ui.js"></script>
+    <script src="game-controller.js"></script>
+    <script src="game-rollout.js"></script>
+    <script src="intelligent-system-loader.js"></script>
+    <script src="tournament.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Initialize the app after all scripts are loaded -->
+    <script>
+        window.addEventListener('load', function () {
+            // 모든 스크립트와 리소스가 로드된 후에 앱 초기화
+            if (typeof initializeApp === 'function') {
+                initializeApp();
+            } else {
+                console.error("Cannot find initializeApp function.");
+            }
+        });
+    </script>
+</body>
+
+</html>
