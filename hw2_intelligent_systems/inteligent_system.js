@@ -447,10 +447,10 @@ function analyzeStage(stageConfig, initialBoard, validMoves, api)
     console.log("White move percent: " + whiteMovePercent);
 
     const pessimisticMovesExpectation = Math.max(blackMovePercent, whiteMovePercent) * (stageConfig.boardSize * stageConfig.boardSize - 4 - stageConfig.initialBlocked.length);
-    const moveTimeLeeway = 0.85
+    const moveTimeLeeway = 0.8
     maxTime = 10 / pessimisticMovesExpectation;
     maxTime *= moveTimeLeeway;
-    maxTime *= 0.5 // For testing purposes
+    // maxTime *= 0.5 // For testing purposes
     console.log("Max time per move: " + maxTime + " seconds");
 
     let finalTime = Date.now();
